@@ -1,0 +1,29 @@
+<header style="background-color: {% block header_bg %}#000000{% endblock %};">
+    <div class="container" style="display: flex; justify-content: space-between;">
+        <div class="row">
+            <div class="col-md-6">
+                <img src="{% static 'images/pdr-logo-white.png' %}" alt="PDR-Team" class="img-fluid" style="width: 150px;">
+            </div>
+            <div class="col-md-6">
+                <nav class="desktop-nav">
+                    <ul>
+                        {% if user.is_authenticated %}
+                            <li>
+                                {% if user.user_type == 'ADMIN' %}
+                                    <a href="{% url 'admin-dashboard' %}">Dashboard</a>
+                                {% elif user.user_type == 'PROJECT_MANAGER' %}
+                                    <a href="{% url 'project-manager-dashboard' %}">Dashboard</a>
+                                {% else %}
+                                    <a href="{% url 'time-tracking' %}">Zeiterfassung</a>
+                                {% endif %}
+                            </li>
+                            <li><a href="{% url 'logout' %}">Logout</a></li>
+                        {% else %}
+                            <li><a href="{% url 'login' %}">Login</a></li>
+                        {% endif %}
+                    </ul>                            
+                </nav>
+            </div>
+        </div>
+    </div>
+</header>

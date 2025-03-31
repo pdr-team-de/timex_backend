@@ -1,0 +1,49 @@
+{% extends "time_tracking/base/base.html" %}
+{% load static %}
+
+{% block title %}Zeiterfassung{% endblock %}
+
+{% block content %}
+<div class="main-background">
+    <div id="info-container" class="info-container">
+        <p>Für heute sind noch keine Zeiten erfasst.</p>
+    </div>
+    <div id="time-entries-container">
+        {% for entry in time_entries %}
+        <div class="time-tracking-container" id="time-tracking-{{ forloop.counter }}">
+            <div class="time-tracking-item">
+                <img src="{% static 'icons/'|add:entry.get_icon_name|add:'.svg' %}" alt="Time Icon" class="time-icon">
+                <div class="time-info">
+                    <p class="mb-0">{{ entry.timestamp|date:"H:i" }} {{ entry.timestamp|date:"d.m.Y" }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<footer class="tracking-footer">
+    <div class="time-button-container">
+        <div class="time-button-item">
+            <button id="KommenAktiv" class="kommen-btn-icon" {% if last_action == 'kommen' %}disabled{% endif %}>
+                <img src="{% static 'icons/KommenAktivMitText.svg' %}" alt="Kommen Icon">
+            </button>
+        </div>
+        <div class="time-button-item">
+            <button id="GehenAktiv" class="gehen-btn-icon" {% if not last_action == 'kommen' %}disabled{% endif %}>
+                <img src="{% static 'icons/GehenAktivMitText.svg' %}" alt="Gehen Icon">
+            </button>
+        </div>
+        <div class="time-button-item">
+            <button id="FeierabendAktiv" class="feierabend-btn-icon" style="display: {% if show_feierabend %}flex{% else %}none{% endif %};">
+                <img src="{% static 'icons/FeierabendAktivMitText.svg' %}" alt="Feierabend Icon">
+            </button>
+        </div>
+    </div>
+</footer>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script src="{% static 'js/tracking.js' %}"></script>
+{% endblock %}

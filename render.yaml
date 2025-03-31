@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: timex
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn timex_project.wsgi:application"
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PYTHON_VERSION
+        value: 3.12.0

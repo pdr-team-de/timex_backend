@@ -1,0 +1,41 @@
+{% extends "time_tracking/base/base.html" %}
+
+{% block title %}Projektleiter Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Zeiterfassung Übersicht</h2>
+    {% regroup time_entries by user as user_entries %}
+    
+    {% for user_group in user_entries %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>{{ user_group.grouper.get_full_name }}</h3>
+            <p>Station: {{ user_group.grouper.station.name }}</p>
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Datum</th>
+                        <th>Art</th>
+                        <th>Zeit</th>
+                        <th>Notiz</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in user_group.list %}
+                    <tr>
+                        <td>{{ entry.timestamp|date:"d.m.Y" }}</td>
+                        <td>{{ entry.get_entry_type_display }}</td>
+                        <td>{{ entry.timestamp|time:"H:i" }}</td>
+                        <td>{{ entry.note|default:"-" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
