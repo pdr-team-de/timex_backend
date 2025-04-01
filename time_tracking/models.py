@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.conf import settings
 import random
 import string
 
@@ -51,16 +52,51 @@ class CustomUser(AbstractUser):
         super().save(*args, **kwargs)
 
 class TimeEntry(models.Model):
-    ENTRY_TYPES = (
+    ENTRY_TYPES = [
         ('KOMMEN', 'Kommen'),
         ('GEHEN', 'Gehen'),
-        ('FEIERABEND', 'Feierabend'),
+        ('FEIERABEND', 'Feierabend')
+    ]
+    
+    APPROVAL_STATUS = [
+        ('PENDING', 'Offen'),
+        ('APPROVED', 'Bestätigt'),
+        ('REJECTED', 'Abgelehnt')
+    ]
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    entry_type = models.CharField(max_length=10, choices=ENTRY_TYPES)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    note = models.TextField(blank=True, null=True)
+    manager_note = models.TextField(blank=True, null=True)
+    approval_status = models.CharField(
+        max_length=10, 
+        choices=APPROVAL_STATUS,
+        default='PENDING'
+    )
+    approved_at = models.DateTimeField(null=True, blank=True)
+    approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='approved_entries'
     )
 
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    entry_type = models.CharField(max_length=20, choices=ENTRY_TYPES)
-    timestamp = models.DateTimeField(auto_now_add=True)
-    note = models.TextField(null=True, blank=True)
+    def get_icon_name(self):
+        return {
+            'KOMMEN': 'KommenAktivTransparent',
+            'GEHEN': 'GehenAktivTransparent',
+            'FEIERABEND': 'FeierabendAktivTransparent'
+        }[self.entry_type]
 
     class Meta:
         ordering = ['-timestamp']
+
+class Notification(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    entry = models.ForeignKey(TimeEntry, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    read = models.BooleanField(default=False)

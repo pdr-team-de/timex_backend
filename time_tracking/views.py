@@ -17,6 +17,12 @@ from django.db.models import Count
 import pandas as pd
 from io import BytesIO
 import xlsxwriter
+from django.utils import timezone
+from rest_framework import viewsets
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .models import Notification
+
 
 # Create your views here.
 def is_admin(user):
@@ -264,3 +270,37 @@ def export_time_entries(request):
     )
     response['Content-Disposition'] = 'attachment; filename=zeiterfassung.xlsx'
     return response
+
+@api_view(['POST'])
+def create_time_entry(request):
+    entry = TimeEntry.objects.create(
+        user=request.user,
+        entry_type=request.data['entry_type'],
+        note=request.data.get('note')
+    )
+    
+    # If it's a FEIERABEND entry, notify project manager
+    if entry.entry_type == 'FEIERABEND':
+        notify_project_manager(entry)
+    
+    return Response({
+        'id': entry.id,
+        'type': entry.entry_type.lower(),
+        'time': entry.timestamp,
+        'note': entry.note
+    })
+
+def notify_project_manager(entry):
+    # Add notification for project manager
+    Notification.objects.create(
+        user=entry.user.project_manager,
+        title='Neue Zeiterfassung zur Überprüfung',
+        message=f'Zeiterfassung von {entry.user.get_full_name()} vom {entry.timestamp.date()}',
+        entry=entry
+    )
+
+def imprint(request):
+    return render(request, 'time_tracking/legal/imprint.html')
+
+def privacy_policy(request):
+    return render(request, 'time_tracking/legal/privacy_policy.html')

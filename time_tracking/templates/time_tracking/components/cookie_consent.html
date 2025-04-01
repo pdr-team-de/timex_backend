@@ -1,0 +1,53 @@
+{% load static %}
+
+<div id="cookieConsent" class="cookie-consent" style="display: none;">
+    <div class="cookie-content">
+        <p>Diese Website verwendet technisch notwendige Cookies. Durch die weitere Nutzung der Website stimmen Sie der Verwendung von Cookies zu.</p>
+        <div class="cookie-buttons">
+            <button id="acceptCookies" class="btn btn-primary">Akzeptieren</button>
+            <a href="{% url 'privacy' %}" class="btn btn-link">Mehr erfahren</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.cookie-consent {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 1rem;
+    z-index: 9999;
+}
+
+.cookie-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cookie-buttons {
+    display: flex;
+    gap: 1rem;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cookieConsent = document.getElementById('cookieConsent');
+    const acceptButton = document.getElementById('acceptCookies');
+
+    if (!localStorage.getItem('cookiesAccepted')) {
+        cookieConsent.style.display = 'block';
+    }
+
+    acceptButton.addEventListener('click', function() {
+        localStorage.setItem('cookiesAccepted', 'true');
+        cookieConsent.style.display = 'none';
+    });
+});
+</script>

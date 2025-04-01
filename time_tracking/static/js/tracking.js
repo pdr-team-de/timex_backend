@@ -1,18 +1,66 @@
 document.addEventListener('DOMContentLoaded', function(){
-    let timeEntries = []; // Array to store time entries
-    let totalWorkTime = 0; // Total work time 
-    let totalBreakTime = 0; // Total break time
+    // State management
+    let timeEntries = [];
+    let totalWorkTime = 0;
+    let totalBreakTime = 0;
     let lastAction = null;
     let containerCount = 0;
 
-    document.getElementById('hamburger-menu').addEventListener('click', function(){
-        document.getElementById('menu-overlay').style.display = 'flex';
-    });
+    // Icon paths configuration
+    const BUTTON_STATES = {
+        KOMMEN: {
+            active: '../icons/KommenAktivMitText.svg',
+            inactive: '../icons/KommenInaktivMitText.svg',
+            transparent: '../icons/KommenAktivTransparent.svg'
+        },
+        GEHEN: {
+            active: '../icons/GehenAktivMitText.svg',
+            inactive: '../icons/GehenInaktivMitText.svg',
+            transparent: '../icons/GehenAktivTransparent.svg'
+        },
+        FEIERABEND: {
+            active: '../icons/FeierabendAktivMitText.svg',
+            inactive: '../icons/FeierabendInaktivMitText.svg',
+            transparent: '../icons/FeierabendAktivTransparent.svg'
+        }
+    };
 
-    document.getElementById('close-menu').addEventListener('click', function(){
-        document.getElementById('menu-overlay').style.display = 'none';
-    });
+    // Button state management
+    function updateButtonStates(action) {
+        const kommenBtn = document.getElementById('KommenAktiv');
+        const gehenBtn = document.getElementById('GehenAktiv');
+        const feierabendBtn = document.getElementById('FeierabendAktiv');
 
+        switch(action) {
+            case 'kommen':
+                kommenBtn.disabled = true;
+                kommenBtn.querySelector('img').src = BUTTON_STATES.KOMMEN.inactive;
+                gehenBtn.disabled = false;
+                gehenBtn.querySelector('img').src = BUTTON_STATES.GEHEN.active;
+                feierabendBtn.style.display = 'none';
+                break;
+
+            case 'gehen':
+                gehenBtn.disabled = true;
+                gehenBtn.querySelector('img').src = BUTTON_STATES.GEHEN.inactive;
+                kommenBtn.disabled = false;
+                kommenBtn.querySelector('img').src = BUTTON_STATES.KOMMEN.active;
+                feierabendBtn.style.display = 'flex';
+                feierabendBtn.querySelector('img').src = BUTTON_STATES.FEIERABEND.active;
+                break;
+
+            case 'feierabend':
+                kommenBtn.disabled = true;
+                gehenBtn.disabled = true;
+                feierabendBtn.disabled = true;
+                kommenBtn.querySelector('img').src = BUTTON_STATES.KOMMEN.inactive;
+                gehenBtn.querySelector('img').src = BUTTON_STATES.GEHEN.inactive;
+                feierabendBtn.querySelector('img').src = BUTTON_STATES.FEIERABEND.inactive;
+                break;
+        }
+    }
+
+    // Event Listeners
     document.getElementById('KommenAktiv').addEventListener('click', function(){
         const now = new Date();
         const entry = {
@@ -25,7 +73,6 @@ document.addEventListener('DOMContentLoaded', function(){
         if (!lastAction) {
             document.getElementById('info-container').style.display = 'none';
         } else if (lastAction === 'gehen') {
-            // Calculate and add break time
             const lastGehen = timeEntries.find(e => e.type === 'gehen');
             if (lastGehen) {
                 const breakTime = Math.round((now - lastGehen.time) / (1000 * 60));
@@ -34,16 +81,9 @@ document.addEventListener('DOMContentLoaded', function(){
             }
         }
         
-        // Create new tracking container
         createTimeTrackingContainer(entry);
         lastAction = 'kommen';
-        
-        // Button states
-        this.disabled = true;
-        this.querySelector('img').src = '../icons/KommenInaktivMitText.svg';
-        console.log('Kommen button resource path:', this.querySelector('img').src);
-        document.getElementById('GehenAktiv').disabled = false;
-        document.getElementById('GehenAktiv').querySelector('img').src = '../icons/GehenAktivMitText.svg';
+        updateButtonStates('kommen');
     });
 
     document.getElementById('GehenAktiv').addEventListener('click', function(){
@@ -55,7 +95,6 @@ document.addEventListener('DOMContentLoaded', function(){
         };
         timeEntries.push(entry);
 
-        // Calculate work time since last 'kommen'
         const lastKommen = timeEntries.filter(e => e.type === 'kommen').pop();
         if (lastKommen) {
             const workTime = Math.round((now - lastKommen.time) / (1000 * 60));
@@ -63,17 +102,39 @@ document.addEventListener('DOMContentLoaded', function(){
             updateInfoContainer();
         }
 
-        // Create new tracking container
         createTimeTrackingContainer(entry);
-        
         lastAction = 'gehen';
-        document.getElementById('FeierabendAktiv').style.display = 'flex';
+        updateButtonStates('gehen');
+    });
 
-        // Button states
-        this.disabled = true;
-        this.querySelector('img').src = '../icons/GehenInaktivMitText.svg';
-        document.getElementById('KommenAktiv').disabled = false;
-        document.getElementById('KommenAktiv').querySelector('img').src = '../icons/KommenAktivMitText.svg';
+    document.getElementById('FeierabendAktiv').addEventListener('click', function(){
+        const note = prompt('Sie sind dabei ihren Arbeitstag zu beenden. Dieser Schritt kann nicht rückgängig gemacht werden. \nOptional: Möchten Sie eine Notiz an den Projektleiter senden?');
+        if (note !== null) {
+            const now = new Date();
+            const entry = {
+                type: 'feierabend',
+                time: now,
+                containerId: `time-tracking-${++containerCount}`,
+                note: note
+            };
+            timeEntries.push(entry);
+
+            if (lastAction === 'kommen') {
+                const lastKommen = timeEntries.filter(e => e.type === 'kommen').pop();
+                if (lastKommen) {
+                    const workTime = Math.round((now - lastKommen.time) / (1000 * 60));
+                    totalWorkTime += workTime;
+                    updateInfoContainer();
+                }
+            }
+
+            createTimeTrackingContainer(entry);
+            lastAction = 'feierabend';
+            updateButtonStates('feierabend');
+            
+            // Send data to server
+            sendTimeEntries(timeEntries, note);
+        }
     });
 
     function createTimeTrackingContainer(entry) {
@@ -91,24 +152,14 @@ document.addEventListener('DOMContentLoaded', function(){
             year: 'numeric'
         });
         
-        let iconName;
-        switch(entry.type) {
-            case 'kommen':
-                iconName = 'KommenAktivTransparent';
-                break;
-            case 'gehen':
-                iconName = 'GehenAktivTransparent';
-                break;
-            case 'feierabend':
-                iconName = 'FeierabendAktivTransparent';
-                break;
-        }
+        const iconName = BUTTON_STATES[entry.type.toUpperCase()].transparent;
         
         container.innerHTML = `
             <div class="time-tracking-item">
-                <img src="../icons/${iconName}.svg" alt="Time Icon" class="time-icon">
+                <img src="${iconName}" alt="Time Icon" class="time-icon">
                 <div class="time-info">
                     <p class="mb-0">${timeString} ${dateString}</p>
+                    ${entry.note ? `<p class="text-muted mb-0">Notiz: ${entry.note}</p>` : ''}
                 </div>
             </div>
         `;
@@ -145,41 +196,62 @@ document.addEventListener('DOMContentLoaded', function(){
         }
     }
 
-    document.getElementById('FeierabendAktiv').addEventListener('click', function(){
-        const note = prompt('Sie sind dabei ihren Arbeitstag zu beenden. Dieser Schritt kann nicht ruckgängig gemacht werden. \nOptional: Möchten Sie eine Notiz an den Projektleiter senden?');
-        if (note !== null){
-            const now = new Date();
-            // Create final time tracking entry for Feierabend
-            const entry = {
-                type: 'feierabend',
-                time: now,
-                containerId: `time-tracking-${++containerCount}`
-            };
-            createTimeTrackingContainer(entry);
-
-            // Calculate final work time if last action was 'kommen'
-            if (lastAction === 'kommen') {
-                const lastKommen = timeEntries.filter(e => e.type === 'kommen').pop();
-                if (lastKommen) {
-                    const workTime = Math.round((now - lastKommen.time) / (1000 * 60));
-                    totalWorkTime += workTime;
-                    updateInfoContainer();
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
                 }
             }
-
-            alert('Ihr Arbeitstag wurde beendet. Schönen Feierabend! \n' + (note || ' Keine Notiz'));
-            
-            // Reset buttons
-            document.getElementById('KommenAktiv').disabled = true;
-            document.getElementById('GehenAktiv').disabled = true;
-            this.disabled = true;
-            
-            // Update button images
-            document.getElementById('KommenAktiv').querySelector('img').src = '../icons/KommenInaktivMitText.svg';
-            document.getElementById('GehenAktiv').querySelector('img').src = '../icons/GehenInaktivMitText.svg';
-            this.querySelector('img').src = '../icons/FeierabendInaktivMitText.svg';
         }
-       
+        return cookieValue;
+    }
+
+    async function createTimeEntry(type, note = null) {
+        try {
+            const response = await fetch('/api/time-entries/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    entry_type: type,
+                    note: note
+                })
+            });
+
+            if (!response.ok) throw new Error('Network response was not ok');
+            const data = await response.json();
+            
+            // Update UI with new entry
+            createTimeTrackingContainer(data);
+            updateButtonStates(type);
+            updateInfoContainer();
+
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Fehler beim Speichern des Zeiteintrags');
+        }
+    }
+
+    document.getElementById('KommenAktiv').addEventListener('click', function(){
+        this.disabled = true;
+        createTimeEntry('KOMMEN');
+    });
+
+    document.getElementById('GehenAktiv').addEventListener('click', function(){
+        this.disabled = true;
+        createTimeEntry('GEHEN');
+    });
+
+    document.getElementById('FeierabendAktiv').addEventListener('click', function(){
+        const note = prompt('Möchten Sie eine Notiz für den Projektleiter hinterlassen?');
+        createTimeEntry('FEIERABEND', note);
     });
 
 });

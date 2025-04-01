@@ -5,6 +5,25 @@
 {% block content %}
 <div class="container mt-5">
     <h2>Zeiterfassung Übersicht</h2>
+    <!-- Notifications -->
+    <div class="notifications-container mb-4">
+        {% for notification in notifications %}
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <strong>{{ notification.title }}</strong>
+            <p>{{ notification.message }}</p>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <div class="mt-2">
+                <button class="btn btn-success btn-sm approve-entry" data-entry-id="{{ notification.entry.id }}">
+                    Bestätigen
+                </button>
+                <button class="btn btn-danger btn-sm reject-entry" data-entry-id="{{ notification.entry.id }}">
+                    Ablehnen
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
     {% regroup time_entries by user as user_entries %}
     
     {% for user_group in user_entries %}
@@ -20,16 +39,35 @@
                         <th>Datum</th>
                         <th>Art</th>
                         <th>Zeit</th>
-                        <th>Notiz</th>
+                        <th>Notiz Zeitarbeitskraft</th>
+                        <th>Notiz Projektleiter</th>
+                        <th>Status</th>
+                        <th>Aktionen</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for entry in user_group.list %}
-                    <tr>
+                    <tr data-entry-id="{{ entry.id }}">
                         <td>{{ entry.timestamp|date:"d.m.Y" }}</td>
                         <td>{{ entry.get_entry_type_display }}</td>
                         <td>{{ entry.timestamp|time:"H:i" }}</td>
                         <td>{{ entry.note|default:"-" }}</td>
+                        <td>{{ entry.manager_note|default:"-" }}</td>
+                        <td>
+                            <span class="badge {% if entry.approval_status == 'APPROVED' %}bg-success{% elif entry.approval_status == 'REJECTED' %}bg-danger{% else %}bg-warning{% endif %}">
+                                {{ entry.get_approval_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if entry.approval_status == 'PENDING' %}
+                            <button class="btn btn-success btn-sm approve-entry" data-entry-id="{{ entry.id }}">
+                                <i class="fas fa-check"></i> Bestätigen
+                            </button>
+                            <button class="btn btn-danger btn-sm reject-entry" data-entry-id="{{ entry.id }}">
+                                <i class="fas fa-times"></i> Ablehnen
+                            </button>
+                            {% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -38,4 +76,82 @@
     </div>
     {% endfor %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Handle approve entries
+    document.querySelectorAll('.approve-entry').forEach(button => {
+        button.addEventListener('click', async function() {
+            const entryId = this.dataset.entryId;
+            const note = prompt('Möchten Sie eine Notiz hinzufügen?');
+            
+            try {
+                const response = await fetch(`/api/time-entries/${entryId}/approve/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        manager_note: note
+                    })
+                });
+
+                if (!response.ok) throw new Error('Network response was not ok');
+                location.reload();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Fehler beim Bestätigen des Eintrags');
+            }
+        });
+    });
+
+    // Handle reject entries
+    document.querySelectorAll('.reject-entry').forEach(button => {
+        button.addEventListener('click', async function() {
+            const entryId = this.dataset.entryId;
+            const note = prompt('Bitte geben Sie einen Grund für die Ablehnung an:');
+            
+            if (note) {
+                try {
+                    const response = await fetch(`/api/time-entries/${entryId}/reject/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify({
+                            manager_note: note
+                        })
+                    });
+
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    location.reload();
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Fehler beim Ablehnen des Eintrags');
+                }
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

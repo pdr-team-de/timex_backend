@@ -17,4 +17,6 @@ urlpatterns = [
     path('generate-password/', views.generate_password_view, name='generate-password'),
     path('api/user-time-entries/<int:user_id>/', views.get_user_time_entries, name='user-time-entries'),
     path('api/export-time-entries/', views.export_time_entries, name='export-time-entries'),
+    path('privacy/', views.privacy_policy, name='privacy'),
+    path('imprint/', views.imprint, name='imprint'),
 ]
