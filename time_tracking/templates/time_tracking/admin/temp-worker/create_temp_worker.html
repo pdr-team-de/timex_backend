@@ -1,6 +1,7 @@
-{% extends "time_tracking/base/base.html" %}
+{% extends "time_tracking/base/create_user_base.html" %}
+{% load static %}
 
-{% block title %}Create Temp Worker{% endblock %}
+{% block title %}Zeitarbeitskraft erstellen{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
@@ -8,7 +9,7 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
-                    <h2>Create Temp Worker Account</h2>
+                    <h2>Zeitarbeitskraft erstellen</h2>
                 </div>
                 <div class="card-body">
                     {% if messages %}
@@ -19,25 +20,114 @@
                     </div>
                     {% endif %}
                     
-                    <form method="post">
+                    <form method="post" id="createTempWorkerForm">
                         {% csrf_token %}
                         {% for field in form %}
-                        <div class="mb-3">
-                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                            {{ field }}
-                            {% if field.errors %}
-                            <div class="alert alert-danger">
-                                {{ field.errors }}
+                            {% if field.name != 'generated_password' %}
+                            <div class="mb-3">
+                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.errors %}
+                                <div class="alert alert-danger">
+                                    {{ field.errors }}
+                                </div>
+                                {% endif %}
                             </div>
                             {% endif %}
-                        </div>
                         {% endfor %}
-                        <button type="submit" class="btn btn-primary">Create Account</button>
-                        <a href="{% url 'admin-dashboard' %}" class="btn btn-secondary">Cancel</a>
+
+                        <!-- Password Generator Section -->
+                        <div class="mb-3">
+                            <label class="form-label">Generiertes Passwort</label>
+                            <div class="input-group">
+                                <input type="text" 
+                                       id="generatedPassword" 
+                                       class="form-control" 
+                                       readonly 
+                                       value="{{ initial_password }}"
+                                       style="background-color: #fff;">
+                                <button type="button" class="btn btn-outline-secondary" id="regeneratePassword">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" id="copyPassword">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">Dieses Passwort wird automatisch an den Benutzer per E-Mail gesendet.</small>
+                        </div>
+
+                        <input type="hidden" name="generated_password" id="hiddenPassword">
+
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary">Account erstellen</button>
+                            <a href="{% url 'admin-dashboard' %}" class="btn btn-secondary">Abbrechen</a>
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get DOM elements with error checking
+    const generatedPasswordInput = document.getElementById('generatedPassword');
+    const hiddenPasswordInput = document.getElementById('hiddenPassword');
+    const regenerateBtn = document.getElementById('regeneratePassword');
+    const copyBtn = document.getElementById('copyPassword');
+
+    // Debug output to verify elements are found
+    console.log('Generated Password Input:', generatedPasswordInput);
+    console.log('Hidden Password Input:', hiddenPasswordInput);
+    console.log('Regenerate Button:', regenerateBtn);
+    console.log('Copy Button:', copyBtn);
+
+    async function generateNewPassword() {
+        try {
+            console.log('Fetching new password...');
+            const response = await fetch("{% url 'generate-password' %}");
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('Received password:', data.password);
+            
+            if (generatedPasswordInput && data.password) {
+                generatedPasswordInput.value = data.password;
+                hiddenPasswordInput.value = data.password;
+                console.log('Password set in inputs');
+            } else {
+                console.error('Missing elements or password data');
+            }
+        } catch (error) {
+            console.error('Error generating password:', error);
+        }
+    }
+
+    // Generate initial password
+    generateNewPassword();
+
+    // Add event listeners with error checking
+    if (regenerateBtn) {
+        regenerateBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            generateNewPassword();
+        });
+    }
+
+    if (copyBtn && generatedPasswordInput) {
+        copyBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            generatedPasswordInput.select();
+            document.execCommand('copy');
+            alert('Passwort in die Zwischenablage kopiert!');
+        });
+    }
+});
+</script>
 {% endblock %}

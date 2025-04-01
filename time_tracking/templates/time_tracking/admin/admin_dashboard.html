@@ -1,10 +1,10 @@
-{% extends "time_tracking/base/base.html" %}
+{% extends "time_tracking/base/admin_base.html" %}
 {% load static %}
 
 {% block title %}Admin Dashboard{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid" style="background-color: aliceblue;">
     <div class="row">
         <!-- Sidebar with Accordion -->
         <div class="col-md-3 col-lg-2 d-md-block bg-light sidebar" style="color: black;">
@@ -40,10 +40,13 @@
                         <div class="accordion-body">
                             <ul class="nav flex-column">
                                 <li class="nav-item">
-                                    <a class="nav-link" href="{% url 'create-project-manager' %}">Projektleiter erstellen</a>
+                                    <a class="nav-link" href="{% url 'create-project-manager' %}">Projektleiter anlegen</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" href="{% url 'create-temp-worker' %}">Zeitarbeitskraft erstellen</a>
+                                    <a class="nav-link" href="{% url 'create-temp-worker' %}">Zeitarbeitskraft anlegen</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{% url 'create-temp-worker' %}">Zeitarbeitsfirma anlegen</a>
                                 </li>
                             </ul>
                         </div>
@@ -77,7 +80,7 @@
 
 
         <!-- Main Content -->
-        <div class="col-md-9 col-lg-10 ms-sm-auto px-md-4">
+        <div class="col-md-9 col-lg-10 ms-sm-auto px-md-4" style="background-color: aliceblue;">
             <!-- Stats Overview -->
             <div class="row mt-4">
                 <div class="col-md-4">
@@ -92,7 +95,7 @@
             </div>
 
             <!-- Filters -->
-            <div class="row mt-4">
+            <div class="row mt-4" style="background-color: aliceblue;">
                 <div class="col-12">
                     <div class="card">
                         <div class="card-body">
@@ -122,6 +125,14 @@
                                     </select>
                                 </div>
                                 <div class="col-md-3">
+                                    <select class="form-select" id="userTypeFilter" name="user_type">
+                                        <option value="">Benutzertyp wählen...</option>
+                                        {% for value, label in user_types %}
+                                            <option value="{{ value }}">{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
                                     <input type="text" class="form-control" id="searchInput" placeholder="Suchen...">
                                 </div>
                                 <div class="col-12">
@@ -140,7 +151,117 @@
                 </div>
             </div>
 
-            <!-- Time Tracking Table -->
+            <!-- After the filters section -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Benutzerübersicht</h5>
+                <div class="btn-group">
+                    <button class="btn btn-success" id="exportExcel">
+                        <i class="fas fa-file-excel"></i> Ausgewählte exportieren
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" id="selectAll" class="form-check-input">
+                                </th>
+                                <th>Name</th>
+                                <th>Benutzertyp</th>
+                                <th>Station</th>
+                                <th>Projektleiter</th>
+                                <th>Zeitarbeitsfirma</th>
+                                <th>E-Mail</th>
+                                <th>Status</th>
+                                <th>Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr class="user-row"
+                                data-user-type="{{ user.user_type }}"
+                                data-station="{{ user.station.id|default:'' }}"
+                                data-company="{{ user.zeitarbeitsfirma.id|default:'' }}"
+                                data-manager="{{ user.project_manager.id|default:'' }}"
+                                data-user-id="{{ user.id }}">
+                                <td>
+                                    <input type="checkbox" 
+                                        class="form-check-input user-select" 
+                                        name="userSelect" 
+                                        value="{{ user.id }}"
+                                        {% if user.user_type != 'TEMP_WORKER' %}disabled{% endif %}>
+                                </td>
+                                <td class="view-details" style="cursor: pointer;">{{ user.get_full_name }}</td>
+                                <td>{{ user.get_full_name }}</td>
+                                <td>
+                                    {% if user.user_type == 'TEMP_WORKER' %}
+                                        <span class="badge bg-info">Zeitarbeitskraft</span>
+                                    {% elif user.user_type == 'PROJECT_MANAGER' %}
+                                        <span class="badge bg-primary">Projektleiter</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ user.station.name|default:'-' }}</td>
+                                <td>{{ user.project_manager.get_full_name|default:'-' }}</td>
+                                <td>{{ user.zeitarbeitsfirma.name|default:'-' }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    <span class="badge {% if user.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                        {% if user.is_active %}Aktiv{% else %}Inaktiv{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="userDetailsModal" tabindex="-1" aria-labelledby="userDetailsModalLabel">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userDetailsModalLabel">Zeiteinträge</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex justify-content-between mb-3">
+                    <h6 class="modal-subtitle"></h6>
+                    <div>
+                        <button class="btn btn-success me-2" id="exportSingleExcel">
+                            <i class="fas fa-file-excel"></i> Diese Einträge exportieren
+                        </button>
+                        <button class="btn btn-primary" id="saveChanges">
+                            <i class="fas fa-save"></i> Änderungen speichern
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="timeEntriesTable"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+            <!-- Time Tracking Table
             <div class="row mt-4">
                 <div class="col-12">
                     {% for worker, dates in workers_data.items %}
@@ -153,12 +274,12 @@
                             <p>Station: {{ worker.station.name }} | Projektleiter: {{ worker.project_manager.get_full_name }}</p>
                         </div>
                         <div class="card-body">
-                            <!-- ... existing table code ... -->
+                             ... existing table code ... 
                         </div>
                     </div>
                     {% endfor %}
                 </div>
-            </div>
+            </div>-->
         </div>
     </div>
 </div>
@@ -170,6 +291,7 @@
      /* Main layout adjustments */
      body {
         padding-top: 60px;
+        background-color: aliceblue;
     }
     
     /* Sidebar styling */
@@ -193,13 +315,13 @@
 
     /* Accordion styling */
     .accordion-button {
-        background-color: #7c7c7c;
+        background-color: #ffffff;
         color: #212529;
         font-weight: 500;
     }
 
     .accordion-button:not(.collapsed) {
-        background-color: #465463;
+        background-color: #eaeaea;
         color: #0d6efd;
     }
 
@@ -266,6 +388,21 @@
     .text-muted {
         color: #6c757d !important;
     }
+
+    .btn-success {
+        background-color: #198754;
+        border-color: #198754;
+        color: white; 
+    }
+
+    .btn-success:hover {
+        background-color: #157347;
+        border-color: #146c43;
+    }
+
+    .card-header .btn {
+        margin-left: 1rem;
+    }
 </style>
 {% endblock %}
 
@@ -277,42 +414,217 @@ document.addEventListener('DOMContentLoaded', function() {
     const applyFilters = document.getElementById('applyFilters');
     const clearFilters = document.getElementById('clearFilters');
     const searchInput = document.getElementById('searchInput');
-    const timeEntryCards = document.querySelectorAll('.time-entry-card');
+    const userRows = document.querySelectorAll('.user-row');
+    // Select all functionality
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const userCheckboxes = document.querySelectorAll('.user-select:not([disabled])');
 
-    function filterEntries() {
-        const station = document.getElementById('stationFilter').value;
-        const company = document.getElementById('companyFilter').value;
-        const manager = document.getElementById('managerFilter').value;
-        const searchTerm = searchInput.value.toLowerCase();
+    selectAllCheckbox.addEventListener('change', function() {
+        userCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+    });
 
-        timeEntryCards.forEach(card => {
-            let show = true;
+    // Modal handling
+    const exportMultipleBtn = document.getElementById('exportExcel');
+    const exportSingleBtn = document.getElementById('exportSingleExcel');
+    let currentUserId = null;
 
-            if (station && card.dataset.station !== station) show = false;
-            if (company && card.dataset.company !== company) show = false;
-            if (manager && card.dataset.manager !== manager) show = false;
+    if (exportMultipleBtn) {
+        exportMultipleBtn.addEventListener('click', async function() {
+            const selectedUsers = Array.from(document.querySelectorAll('.user-select:checked'))
+                .map(cb => cb.value);
             
-            if (searchTerm) {
-                const cardText = card.textContent.toLowerCase();
-                if (!cardText.includes(searchTerm)) show = false;
+            if (selectedUsers.length === 0) {
+                alert('Bitte wählen Sie mindestens einen Benutzer aus.');
+                return;
             }
 
-            card.style.display = show ? 'block' : 'none';
+            await exportTimeEntries(selectedUsers);
         });
     }
 
-    // Only apply filters when button is clicked
-    applyFilters.addEventListener('click', filterEntries);
+    if (exportSingleBtn) {
+        exportSingleBtn.addEventListener('click', async function() {
+            if (!currentUserId) return;
+            await exportTimeEntries([currentUserId]);
+        });
+    }
 
-    // Real-time search while typing
-    searchInput.addEventListener('input', filterEntries);
+    const viewDetailsCells = document.querySelectorAll('.view-details');
+    
+    // Populate timeEntriesTable headers
+    const timeEntriesTable = document.getElementById('timeEntriesTable');
+    timeEntriesTable.innerHTML = `
+        <thead>
+            <tr>
+                <th>Datum</th>
+                <th>Nachname</th>
+                <th>Vorname</th>
+                <th>Arbeitsbeginn</th>
+                <th>Arbeitsende</th>
+                <th>Pause (HH:MM)</th>
+                <th>Notiz Zeitarbeitskraft</th>
+                <th>Notiz Projektleiter</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="timeEntriesBody"></tbody>
+    `;
+
+    // Handle row clicks
+    viewDetailsCells.forEach(cell => {
+        cell.addEventListener('click', async function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const row = this.closest('tr');
+            const userId = row.dataset.userId;
+            const userType = row.dataset.userType;
+            currentUserId = userId;
+            
+            if (userType === 'TEMP_WORKER') {
+                const modal = new bootstrap.Modal(document.getElementById('userDetailsModal'));
+                try {
+                    const response = await fetch(`/api/user-time-entries/${userId}/`);
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    const data = await response.json();
+                    populateTimeEntriesTable(data);
+                    modal.show();
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Fehler beim Laden der Zeiteinträge');
+                }
+            }
+        });
+    });
+
+    // Export single user's entries
+    document.getElementById('exportSingleExcel').addEventListener('click', async function() {
+        if (!currentUserId) return;
+        await exportTimeEntries([currentUserId]);
+    });
+
+    // Export multiple users' entries
+    document.getElementById('exportExcel').addEventListener('click', async function() {
+        const selectedUsers = Array.from(document.querySelectorAll('.user-select:checked'))
+            .map(cb => cb.value);
+        
+        if (selectedUsers.length === 0) {
+            alert('Bitte wählen Sie mindestens einen Benutzer aus.');
+            return;
+        }
+
+        await exportTimeEntries(selectedUsers);
+    });
+
+    async function exportTimeEntries(userIds) {
+        const formData = new FormData();
+        userIds.forEach(id => formData.append('user_ids[]', id));
+
+        try {
+            const response = await fetch('/api/export-time-entries/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+            
+            if (!response.ok) throw new Error('Network response was not ok');
+            
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'zeiterfassung.xlsx';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            a.remove();
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Fehler beim Exportieren der Daten');
+        }
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function populateTimeEntriesTable(entries) {
+        const tbody = document.getElementById('timeEntriesBody');
+        tbody.innerHTML = '';
+        
+        if (entries.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" class="text-center">Keine Einträge gefunden</td>
+                </tr>
+            `;
+            return;
+        }
+
+        entries.forEach(entry => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${entry.date}</td>
+                <td>${entry.last_name}</td>
+                <td>${entry.first_name}</td>
+                <td><input type="time" class="form-control" value="${entry.start_time || ''}" /></td>
+                <td><input type="time" class="form-control" value="${entry.end_time || ''}" /></td>
+                <td><input type="text" class="form-control" value="${entry.break_duration}" /></td>
+                <td><input type="text" class="form-control" value="${entry.worker_note || ''}" /></td>
+                <td><input type="text" class="form-control" value="${entry.manager_note || ''}" /></td>
+                <td><span class="badge ${entry.status === 'Offen' ? 'bg-warning' : 'bg-success'}">${entry.status}</span></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function filterUsers() {
+        const station = document.getElementById('stationFilter').value;
+        const company = document.getElementById('companyFilter').value;
+        const manager = document.getElementById('managerFilter').value;
+        const userType = document.getElementById('userTypeFilter').value;
+        const searchTerm = searchInput.value.toLowerCase();
+
+        userRows.forEach(row => {
+            let show = true;
+
+            if (station && row.dataset.station !== station) show = false;
+            if (company && row.dataset.company !== company) show = false;
+            if (manager && row.dataset.manager !== manager) show = false;
+            if (userType && userType !== 'ALL' && row.dataset.userType !== userType) show = false;
+            
+            if (searchTerm) {
+                const rowText = row.textContent.toLowerCase();
+                if (!rowText.includes(searchTerm)) show = false;
+            }
+
+            row.style.display = show ? '' : 'none';
+        });
+    }
+
+    applyFilters.addEventListener('click', filterUsers);
+    searchInput.addEventListener('input', filterUsers);
 
     clearFilters.addEventListener('click', () => {
         filterForm.reset();
-        timeEntryCards.forEach(card => card.style.display = 'block');
+        userRows.forEach(row => row.style.display = '');
     });
 
-    // Prevent form submission on enter
     filterForm.addEventListener('submit', (e) => e.preventDefault());
 });
 </script>

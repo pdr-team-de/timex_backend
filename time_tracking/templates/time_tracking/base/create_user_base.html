@@ -1,0 +1,50 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TimeX by PDR-Team{% endblock %}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="admin-body" style="background-color: aliceblue;">
+     
+        <header style="background-color: rgb(236, 236, 236); height: 5em; text-align: center; padding-top: 2em; position: relative;">
+            <h1 style="font-family: Verdana, Geneva, Tahoma, sans-serif ; color:rgb(118, 118, 118); font-weight: 100 ; font-size: x-large; ">Account anlegen</h1>
+            <button id="hamburger-menu" style="position: absolute; top: 0.75em; left: 1em; background: none; border: none; font-size: 2em; cursor: pointer;">☰</button>
+        </header>
+        <div id="menu-overlay"class="menu-overlay">
+            <div class="menu-content">
+                <button id="close-menu" class="btn btn-secondary" style="display: block; align-items: center;" >x</button>
+                <br>
+                <img src="{% static 'images/timex-logo-transparent.png' %}" alt="TimeX Logo" class="img-fluid" style="width: 100px; margin-bottom: 1em;">
+                <p style="font-size: smaller;">Version: 1.0.0</p>
+                <a href="datenschutz.html">Datenschutz</a>
+                <a href="impressum.html">Impressum</a>
+                <a class="btn btn-primary" href="{% url 'logout' %}">Logout</a>
+    
+                <p style="font-size: smaller;">&copy; 2025 PDR-Team GmbH</p>
+            </div>
+        </div>
+    </header>
+    
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    {% block scripts %}
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% endblock %}
+    
+</body>
+</html>

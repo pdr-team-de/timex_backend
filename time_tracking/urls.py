@@ -10,7 +10,11 @@ urlpatterns = [
     path('dashboard/admin/', views.AdminDashboard.as_view(), name='admin-dashboard'),  # Changed
     path('dashboard/admin/project-manager/', views.create_project_manager, name='create-project-manager'),  # Changed
     path('dashboard/admin/temp-worker/', views.create_temp_worker, name='create-temp-worker'),  # Changed
+    path('dashboard/admin/temp-worker/', views.create_temp_firm, name='create-temp-firm'),  # Changed
     path('project-manager/dashboard/', 
          views.ProjectManagerDashboard.as_view(),
          name='project-manager-dashboard'),
+    path('generate-password/', views.generate_password_view, name='generate-password'),
+    path('api/user-time-entries/<int:user_id>/', views.get_user_time_entries, name='user-time-entries'),
+    path('api/export-time-entries/', views.export_time_entries, name='export-time-entries'),
 ]
