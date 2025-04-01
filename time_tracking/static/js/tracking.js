@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', function(){
         // Button states
         this.disabled = true;
         this.querySelector('img').src = 'assets/icons/KommenInaktivMitText.svg';
+        console.log('Kommen button resource path:', this.querySelector('img').src);
         document.getElementById('GehenAktiv').disabled = false;
         document.getElementById('GehenAktiv').querySelector('img').src = 'assets/icons/GehenAktivMitText.svg';
     });
