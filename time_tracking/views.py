@@ -50,7 +50,7 @@ def time_tracking_view(request):
         return redirect('admin-dashboard')
     return render(request, 'time_tracking/tracking.html')
 
-class ProjectManagerDashbaord(UserPassesTestMixin, ListView):
+class ProjectManagerDashboard(UserPassesTestMixin, ListView):
     model = TimeEntry
     template_name = 'time_tracking/project_manager_dashboard.html'
     context_object_name = 'time_entries'
