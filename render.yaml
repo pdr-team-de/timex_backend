@@ -9,3 +9,9 @@ services:
         generateValue: true
       - key: PYTHON_VERSION
         value: 3.12.0
+      - key: RENDER
+        value: true
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
