@@ -14,18 +14,25 @@
     
     <!-- Custom CSS -->
     <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+    <style>
+        background-color{
+            background-color:lightslategray;
+        }
+
+    </style>
     {% block extra_css %}{% endblock %}
 </head>
-<body class="admin-body" style="background-color: aliceblue;">
+<body class="admin-body" style="background-color: #272e32;">
      
-        <header style="background-color: rgb(236, 236, 236); height: 5em; text-align: center; padding-top: 2em; position: relative;">
-            <h1 style="font-family: Verdana, Geneva, Tahoma, sans-serif ; color:rgb(118, 118, 118); font-weight: 100 ; font-size: x-large; ">Login</h1>
-            <button onclick="window.location.href='https://iosif-gogolos.github.io/timex-prototype/index.html'" class="btn btn-secondary" style="position: absolute; top: 0.75em; left: 1em;">Verlassen</button>
+        <header style="background-color: #364856; height: 5em; text-align: center; padding-top: 2em; position: relative;">
+            <h1 style="font-family: Verdana, Geneva, Tahoma, sans-serif ; color:rgb(239, 239, 239); font-weight: 100 ; font-size: x-large; ">Willkommen</h1>
+            <button onclick="window.location.href='https://iosif-gogolos.github.io/timex-prototype/index.html'" class="btn btn-secondary" class="btn btn-secondary" style="position: absolute; top: 0.75em; left: 1em; background: none; border: none; font-size: 2em; cursor: pointer;">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+
         </header>
         
     </header>
-    
-
     <main>
         {% block content %}{% endblock %}
     </main>

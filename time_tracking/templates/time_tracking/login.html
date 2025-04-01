@@ -4,11 +4,14 @@
 {% block title %}Login{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container mt-5" >
     <div class="row justify-content-center">
         <div class="col-md-6 col-lg-4">
-            <div class="card">
+            <div class="card" style="background-color: #364856; color:aliceblue;">
                 <div class="card-body">
+                    <div class="text-center mb-4">
+                        <img src="{% static 'images/timex-logo-transparent.png' %}" alt="Logo" class="img-fluid" style="max-width: 100px;">
+                    </div>
                     <h2 class="text-center mb-4">Login</h2>
                     <form method="post">
                         {% csrf_token %}
@@ -28,6 +31,12 @@
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary">Login</button>
                         </div>
+                        <br/>
+                        <div class="d-grid">
+                            <button onclick="window.location.href='https://iosif-gogolos.github.io/timex-prototype/index.html'" class="btn btn-secondary">Verlassen</button>
+                        </div>
+                        
+
                     </form>
                 </div>
             </div>
