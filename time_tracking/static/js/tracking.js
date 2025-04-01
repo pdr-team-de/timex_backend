@@ -40,10 +40,10 @@ document.addEventListener('DOMContentLoaded', function(){
         
         // Button states
         this.disabled = true;
-        this.querySelector('img').src = 'assets/icons/KommenInaktivMitText.svg';
+        this.querySelector('img').src = '../icons/KommenInaktivMitText.svg';
         console.log('Kommen button resource path:', this.querySelector('img').src);
         document.getElementById('GehenAktiv').disabled = false;
-        document.getElementById('GehenAktiv').querySelector('img').src = 'assets/icons/GehenAktivMitText.svg';
+        document.getElementById('GehenAktiv').querySelector('img').src = '../icons/GehenAktivMitText.svg';
     });
 
     document.getElementById('GehenAktiv').addEventListener('click', function(){
@@ -71,9 +71,9 @@ document.addEventListener('DOMContentLoaded', function(){
 
         // Button states
         this.disabled = true;
-        this.querySelector('img').src = 'assets/icons/GehenInaktivMitText.svg';
+        this.querySelector('img').src = '../icons/GehenInaktivMitText.svg';
         document.getElementById('KommenAktiv').disabled = false;
-        document.getElementById('KommenAktiv').querySelector('img').src = 'assets/icons/KommenAktivMitText.svg';
+        document.getElementById('KommenAktiv').querySelector('img').src = '../icons/KommenAktivMitText.svg';
     });
 
     function createTimeTrackingContainer(entry) {
@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', function(){
         
         container.innerHTML = `
             <div class="time-tracking-item">
-                <img src="assets/icons/${iconName}.svg" alt="Time Icon" class="time-icon">
+                <img src="../icons/${iconName}.svg" alt="Time Icon" class="time-icon">
                 <div class="time-info">
                     <p class="mb-0">${timeString} ${dateString}</p>
                 </div>
@@ -175,9 +175,9 @@ document.addEventListener('DOMContentLoaded', function(){
             this.disabled = true;
             
             // Update button images
-            document.getElementById('KommenAktiv').querySelector('img').src = 'assets/icons/KommenInaktivMitText.svg';
-            document.getElementById('GehenAktiv').querySelector('img').src = 'assets/icons/GehenInaktivMitText.svg';
-            this.querySelector('img').src = 'assets/icons/FeierabendInaktivMitText.svg';
+            document.getElementById('KommenAktiv').querySelector('img').src = '../icons/KommenInaktivMitText.svg';
+            document.getElementById('GehenAktiv').querySelector('img').src = '../icons/GehenInaktivMitText.svg';
+            this.querySelector('img').src = '../icons/FeierabendInaktivMitText.svg';
         }
        
     });
