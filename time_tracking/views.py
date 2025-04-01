@@ -73,7 +73,7 @@ def create_temp_firm(request):
             return redirect('admin-dashboard')
     else:
         form = TempFirmCreationForm()
-    return render(request, 'time_tracking/admin/temp-worker/create_temp_firm.html', {'form': form})
+    return render(request, 'time_tracking/admin/temp-firm/create_temp_firm.html', {'form': form})
 
 @login_required
 def time_tracking_view(request):

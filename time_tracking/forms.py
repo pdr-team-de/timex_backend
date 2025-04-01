@@ -116,10 +116,6 @@ class ProjectManagerCreationForm(BaseUserCreationForm):
         return user, password
 
 class TempFirmCreationForm(forms.ModelForm):
-    firm = forms.ModelChoiceField(
-        queryset=Zeitarbeitsfirma.objects.all(),
-        label='Zeitarbeitsfirma'
-    )
     class Meta:
         model = Zeitarbeitsfirma
         fields = ('name', 'address', 'contact_person')
@@ -128,6 +124,7 @@ class TempFirmCreationForm(forms.ModelForm):
             'address': 'Adresse',
             'contact_person': 'Ansprechpartner'
         }
+
     def save(self, commit=True):
         temp_firm = super().save(commit=False)
         temp_firm.name = self.cleaned_data['name']
