@@ -1,0 +1,496 @@
+.component {
+    color: var(--bs-gray-800);
+    background-color: var(--bs-gray-100);
+    border: 1px solid var(--bs-gray-200);
+    border-radius: .25rem;
+}
+  
+.component-header {
+    color: var(--bs-purple);
+}
+
+body {
+    --bs-body-font-family: var(--bs-font-monospace);
+    --bs-body-line-height: 1.4;
+    --bs-body-bg: var(--bs-white-100);
+    background-color: #ECECEC;
+    color: #fff;
+}
+
+.home-body {
+  --bs-body-font-family: var(--bs-font-monospace);
+  --bs-body-line-height: 1.4;
+  --bs-body-bg: var(--bs-white-100);
+  background-color: #000000;
+  color: #fff;
+}
+
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+  header ul {
+    list-style: none;
+    padding-left: 0;
+    vertical-align: middle;
+    --bs-navbar-link-color: var(--bs-gray-800);
+    --bs-navbar-link-hover-color: var(--bs-gray-900);
+    --bs-navbar-link-hover-bg: var(--bs-gray-200);
+  }
+
+  header li {
+    display: inline-block;
+    vertical-align: middle;
+    color:aliceblue;
+
+  }
+
+  header li a {
+    text-decoration: none;
+    color:aliceblue;
+  }
+
+
+.header-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Inhalt des Menüs*/
+.header-overlay-content{
+    text-align: center;
+    padding: 2em;
+}
+
+.header-overlay-content a{
+    display: block;
+    margin: 1em 0;
+    color: whitesmoke;
+    text-decoration: none;
+    font-size: 1.2em;
+}
+
+.header-overlay-content a:hover {
+    text-decoration: underline;
+}
+
+
+  .main-background {
+    background-image: url('assets/images/MountainsDesktop.svg');
+    background-size: cover;
+    background-position: center;
+    height: 100vh;
+}
+  
+  .table {
+    --bs-table-color: var(--bs-gray-600);
+    --bs-table-bg: var(--bs-gray-100);
+    --bs-table-border-color: transparent;
+  }
+
+  .desktop-nav {
+    display: none;
+}
+
+.desktop-nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.desktop-nav li a {
+    color: white;
+    text-decoration: none;
+    font-size: 1.1em;
+}
+
+
+  nav {
+    font-family: Arial, Helvetica, sans-serif;
+    display: block;
+    padding: 0.5rem 1rem;
+    unicode-bidi: isolate;
+    --bs-navbar-bg: var(--bs-gray-100);
+    --bs-navbar-link-hover-color: var(--bs-gray-900);
+    --bs-navbar-link-hover-bg: var(--bs-gray-200);
+    background-color: black;
+    color:aliceblue;
+  }
+
+  nav ul {
+    display: flex;
+    list-style: none;
+    padding-left: 0;
+    vertical-align: middle;
+    --bs-navbar-link-color: var(--bs-gray-800);
+    --bs-navbar-link-hover-color: var(--bs-gray-900);
+    --bs-navbar-link-hover-bg: var(--bs-gray-200);
+  }
+
+  nav li {
+    display: inline-block;
+    vertical-align: middle;
+    color:aliceblue;
+
+  }
+
+  nav li a {
+    text-decoration: none;
+    color:aliceblue;
+  }
+
+.main-background {
+    background-image: url('assets/images/MountainsDesktop.svg');
+    background-size: cover;
+    background-position: center;
+    height: 100vh;
+}
+  
+  .table {
+    --bs-table-color: var(--bs-gray-600);
+    --bs-table-bg: var(--bs-gray-100);
+    --bs-table-border-color: transparent;
+  }
+
+  nav {
+    font-family: Arial, Helvetica, sans-serif;
+    display: block;
+    padding: 0.5rem 1rem;
+    unicode-bidi: isolate;
+    --bs-navbar-bg: var(--bs-gray-100);
+    --bs-navbar-link-hover-color: var(--bs-gray-900);
+    --bs-navbar-link-hover-bg: var(--bs-gray-200);
+    background-color: black;
+    color:aliceblue;
+  }
+
+  nav ul {
+    list-style: none;
+    padding-left: 0;
+    vertical-align: middle;
+    --bs-navbar-link-color: var(--bs-gray-800);
+    --bs-navbar-link-hover-color: var(--bs-gray-900);
+    --bs-navbar-link-hover-bg: var(--bs-gray-200);
+  }
+
+  nav li {
+    display: inline-block;
+    vertical-align: middle;
+    color:aliceblue;
+
+  }
+
+  nav li a {
+    text-decoration: none;
+    color:aliceblue;
+  }
+
+/* Overlay für das Menü */
+.menu-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Inhalt des Menüs*/
+.menu-content{
+    text-align: center;
+    padding: 2em;
+}
+
+.menu-content a{
+    display: block;
+    margin: 1em 0;
+    color: whitesmoke;
+    text-decoration: none;
+    font-size: 1.2em;
+}
+
+.menu-content a:hover {
+    text-decoration: underline;
+}
+
+.time-button-container{
+    display: flex;
+    justify-content: space-evenly; /* Gleichmäßige Verteilung der Icons */
+    align-items: center;
+    height: 100%;
+    width: 100%; /* Stellt sicher, dass der Container die gesamte Breite einnimmt */
+    padding: 0; /* Entfernt unerwünschte Paddings */
+    margin: 0; 
+}
+
+.time-button-item{
+    display: flex;
+    flex-direction: column;
+    align-items: center;;
+}
+.time-button-item p{
+    margin: 0.5 0 0;
+    font-size: 0.9em;
+}
+
+.kommen-btn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-repeat: no-repeat;
+    background-position: left center;
+    background-size: 18px 18px; /* Größe des Icons */
+    padding-left: 2.5em; /* Platz für das Icon */
+    font-size: 1em;
+    color: white;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.feierabend-btn-icon {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background-repeat: no-repeat;
+    background-position: left center;
+    background-size: 24px 24px; /* Größe des Icons */
+    padding-left: 2.5em; /* Platz für das Icon */
+    font-size: 1em;
+    color: white;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.gehen-btn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-repeat: no-repeat;
+    background-position: left center;
+    background-size: 24px 24px; /* Größe des Icons */
+    padding-left: 2.5em; /* Platz für das Icon */
+    font-size: 1em;
+    color: white;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.info-container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #364856;
+    background-color: rgba(252, 252, 252, 0.5);
+    min-height: 10vh;
+    width: 100%;
+    padding: 1rem;
+}
+
+.info-container p {
+  margin: 0.5rem 0;
+  text-align: center;
+  width: 100%;
+}
+
+.time-tracking-container {
+  margin: 1rem;
+  padding: 1rem;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.time-tracking-item {
+  display: flex;
+  font-family: Arial, Helvetica, sans-serif;
+  align-items: center;
+  gap: 1rem;
+  color: #364856;
+}
+
+.time-button-container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  width: 100%;
+}
+
+.login-button-home{
+  display: none;
+}
+
+.time-button-item button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.time-button-item button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.time-tracking-item img {
+  width: 48px;
+  height: 48px;
+}
+.time-info p {
+  font-weight: lighter;
+  font-size: larger;
+  margin: 0;
+  font-size: 1.1em;
+}
+
+#current-time, #current-date {
+    font-size: 1.2em;
+    margin: 0.2em 0;
+}
+
+.tracking-footer {
+    display: flex;
+    justify-content: center; /* Zentriert die Buttons horizontal */
+    align-items: center; /* Zentriert die Buttons vertikal */
+    background-color: rgba(0, 0, 0, 0.5);
+    height: 20vh;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+footer {
+    font-family: Arial, Helvetica, sans-serif;
+    display: block;
+    padding: 0.5rem 1rem;
+    unicode-bidi: isolate;
+    --bs-navbar-bg: var(--bs-gray-100);
+    --bs-navbar-link-hover-color: var(--bs-gray-900);
+    --bs-navbar-link-hover-bg: var(--bs-gray-200);
+    background-color: black;
+    color:aliceblue;
+  }
+
+
+footer ul {
+    list-style: none;
+    padding-left: 0;
+    vertical-align: middle;
+    --bs-navbar-link-color: var(--bs-gray-800);
+    --bs-navbar-link-hover-color: var(--bs-gray-900);
+    --bs-navbar-link-hover-bg: var(--bs-gray-200);
+  }
+
+  footer li {
+    display: inline-block;
+    vertical-align: middle;
+    color:aliceblue;
+
+  }
+
+  footer li a {
+    text-decoration: none;
+    color:aliceblue;
+  }
+
+  footer li a:hover {
+    text-decoration: underline;
+}
+
+.time-button-item img {
+    width: 75px; /* Breite des Icons */
+    height: 75px; /* Höhe des Icons */
+    object-fit: contain; /* Stellt sicher, dass das Bild proportional bleibt */
+    margin-bottom: 0.5em; /* Abstand zwischen Icon und Button */
+}
+.header-hamburger-menu {
+    width: 30px;
+    height: 20px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+}
+  
+@media (max-width: 768px) {
+    .main-background{
+        background-image: url('assets/images/MountainsMobile.svg')
+    }
+    .header-hamburger-menu{
+        width: 30px;
+        height: 20px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        position: relative;
+    }
+    .bar {
+        width: 100%;
+        height: 2px;
+        background-color: white;
+        transition: transform 0.3 ease;
+    }
+    .header-hamburger-menu.active .bar:nth-child(1){
+        transform: rotate(45deg) translate(5px, 5px);
+    }
+    .header-hamburger-menu.active .bar:nth-child(2){
+        opacity: 0;
+    }
+    .header-hamburger-menu.active .bar:nth-child(3){
+        transform: rotate(-45deg) translate(5px, -5px);
+    }
+
+    
+}
+
+@media (min-width: 768px) {
+  .time-button-container {
+        flex-direction: row; /* Changed from column to row */
+        justify-content: space-evenly;
+        padding: 1rem;
+    }
+    .header-hamburger-menu{
+        display: none;
+    }
+    desktop-nav {
+        display: block;
+    }
+
+    .login-button-home{
+        display: block;
+    }
+
+    header {
+        font-family: Arial, Helvetica, sans-serif;
+        padding-top: 1.5rem;
+        padding-bottom: 1.5rem;;
+        unicode-bidi: isolate;
+        --bs-navbar-bg: var(--bs-gray-100);
+        --bs-navbar-link-hover-color: var(--bs-gray-900);
+        --bs-navbar-link-hover-bg: var(--bs-gray-200);
+        background-color: black;
+        color:aliceblue;
+      }
+}

@@ -1,0 +1,319 @@
+{% extends "time_tracking/base/base.html" %}
+{% load static %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar with Accordion -->
+        <div class="col-md-3 col-lg-2 d-md-block bg-light sidebar" style="color: black;">
+            <div class="accordion sidebar-content" id="adminAccordion">
+                <!-- Home Tab -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#homeCollapse" aria-expanded="true">
+                            <i class="fas fa-home me-2"></i> Home
+                        </button>
+                    </h2>
+                    <div id="homeCollapse" class="accordion-collapse collapse show" data-bs-parent="#adminAccordion">
+                        <div class="accordion-body" style="color: black;">
+                            <ul class="nav flex-column">
+                                <li class="nav-item">
+                                    <a class="nav-link active" href="#overview">Übersicht</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#timeTracking">Zeiterfassung</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <!-- Account Creation Tab -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accountCollapse">
+                            <i class="fas fa-user-plus me-2"></i> Account-Verwaltung
+                        </button>
+                    </h2>
+                    <div id="accountCollapse" class="accordion-collapse collapse" data-bs-parent="#adminAccordion">
+                        <div class="accordion-body">
+                            <ul class="nav flex-column">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{% url 'create-project-manager' %}">Projektleiter erstellen</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{% url 'create-temp-worker' %}">Zeitarbeitskraft erstellen</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <!-- Info Tab (Former Footer) -->
+                <div class="accordion-item mt-auto">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#infoCollapse">
+                            <i class="fas fa-info-circle me-2"></i> Information
+                        </button>
+                    </h2>
+                    <div id="infoCollapse" class="accordion-collapse collapse" data-bs-parent="#adminAccordion">
+                        <div class="accordion-body">
+                            <ul class="nav flex-column">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="https://www.pdr-team.de/datenschutz/">Datenschutz</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="https://www.pdr-team.de/impressum/">Impressum</a>
+                                </li>
+                                <li class="nav-item">
+                                    <span class="nav-link text-muted">&copy; 2025 PDR-Team GmbH</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10 ms-sm-auto px-md-4">
+            <!-- Stats Overview -->
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Aktive Nutzer</h5>
+                            <p class="card-text h2">{{ active_users_count }}</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Add more stat cards as needed -->
+            </div>
+
+            <!-- Filters -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <form id="filterForm" class="row g-3">
+                                <div class="col-md-3">
+                                    <select class="form-select" id="stationFilter" name="station">
+                                        <option value="">Station wählen...</option>
+                                        {% for station in stations %}
+                                            <option value="{{ station.id }}">{{ station.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select" id="companyFilter" name="zeitarbeitsfirma">
+                                        <option value="">Zeitarbeitsfirma wählen...</option>
+                                        {% for company in companies %}
+                                            <option value="{{ company.id }}">{{ company.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select" id="managerFilter" name="project_manager">
+                                        <option value="">Projektleiter wählen...</option>
+                                        {% for manager in project_managers %}
+                                            <option value="{{ manager.id }}">{{ manager.get_full_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control" id="searchInput" placeholder="Suchen...">
+                                </div>
+                                <div class="col-12">
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-primary" id="applyFilters">
+                                            <i class="fas fa-filter me-2"></i>Filter anwenden
+                                        </button>
+                                        <button type="button" class="btn btn-secondary" id="clearFilters">
+                                            <i class="fas fa-times me-2"></i>Filter zurücksetzen
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Time Tracking Table -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    {% for worker, dates in workers_data.items %}
+                    <div class="card mb-4 time-entry-card" 
+                         data-station="{{ worker.station.id }}"
+                         data-company="{{ worker.zeitarbeitsfirma.id }}"
+                         data-manager="{{ worker.project_manager.id }}">
+                        <div class="card-header">
+                            <h3>{{ worker.get_full_name }}</h3>
+                            <p>Station: {{ worker.station.name }} | Projektleiter: {{ worker.project_manager.get_full_name }}</p>
+                        </div>
+                        <div class="card-body">
+                            <!-- ... existing table code ... -->
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+     /* Main layout adjustments */
+     body {
+        padding-top: 60px;
+    }
+    
+    /* Sidebar styling */
+    .sidebar {
+        position: fixed;
+        top: 60px;
+        bottom: 0;
+        left: 0;
+        z-index: 100;
+        padding: 20px 0;
+        box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+        overflow-y: auto;
+        background-color: #f8f9fa;
+    }
+
+    .sidebar-content {
+        display: flex;
+        flex-direction: column;
+        min-height: calc(100vh - 80px);
+    }
+
+    /* Accordion styling */
+    .accordion-button {
+        background-color: #7c7c7c;
+        color: #212529;
+        font-weight: 500;
+    }
+
+    .accordion-button:not(.collapsed) {
+        background-color: #465463;
+        color: #0d6efd;
+    }
+
+    .accordion-button:focus {
+        box-shadow: none;
+        border-color: rgba(0,0,0,.125);
+    }
+
+    .accordion-body {
+        background-color: #ffffff;
+        padding: 1rem;
+    }
+
+    /* Navigation links */
+    .nav-link {
+        color: #212529 !important;
+        padding: 0.5rem 1rem;
+        transition: all 0.2s ease;
+    }
+
+    .nav-link:hover {
+        color: #0d6efd !important;
+        background-color: #e9ecef;
+        text-decoration: none;
+    }
+
+    .nav-link.active {
+        color: #0d6efd !important;
+        background-color: #e7f1ff;
+        font-weight: 500;
+    }
+
+    /* Main content area */
+    .main-content {
+        margin-left: 16.66667%;
+        padding: 20px;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .sidebar {
+            position: static;
+            height: auto;
+        }
+        .main-content {
+            margin-left: 0;
+        }
+    }
+
+    /* Card and button styling */
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+
+    .btn-group {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+
+    /* Info tab styling */
+    .accordion-item.mt-auto {
+        border-top: 1px solid rgba(0,0,0,.125);
+    }
+
+    .text-muted {
+        color: #6c757d !important;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterForm = document.getElementById('filterForm');
+    const applyFilters = document.getElementById('applyFilters');
+    const clearFilters = document.getElementById('clearFilters');
+    const searchInput = document.getElementById('searchInput');
+    const timeEntryCards = document.querySelectorAll('.time-entry-card');
+
+    function filterEntries() {
+        const station = document.getElementById('stationFilter').value;
+        const company = document.getElementById('companyFilter').value;
+        const manager = document.getElementById('managerFilter').value;
+        const searchTerm = searchInput.value.toLowerCase();
+
+        timeEntryCards.forEach(card => {
+            let show = true;
+
+            if (station && card.dataset.station !== station) show = false;
+            if (company && card.dataset.company !== company) show = false;
+            if (manager && card.dataset.manager !== manager) show = false;
+            
+            if (searchTerm) {
+                const cardText = card.textContent.toLowerCase();
+                if (!cardText.includes(searchTerm)) show = false;
+            }
+
+            card.style.display = show ? 'block' : 'none';
+        });
+    }
+
+    // Only apply filters when button is clicked
+    applyFilters.addEventListener('click', filterEntries);
+
+    // Real-time search while typing
+    searchInput.addEventListener('input', filterEntries);
+
+    clearFilters.addEventListener('click', () => {
+        filterForm.reset();
+        timeEntryCards.forEach(card => card.style.display = 'block');
+    });
+
+    // Prevent form submission on enter
+    filterForm.addEventListener('submit', (e) => e.preventDefault());
+});
+</script>
+{% endblock %}
