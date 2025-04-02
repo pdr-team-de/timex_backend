@@ -88,7 +88,8 @@ body {
 
 
   .main-background {
-    background-image: url('../images/MountainsDesktop.svg');
+    background-image: url('/static/time_tracking/images/MountainsDesktop.svg');
+    
     background-size: cover;
     background-position: center;
     height: 100vh;
@@ -151,12 +152,7 @@ body {
     color:aliceblue;
   }
 
-.main-background {
-    background-image: url('assets/images/MountainsDesktop.svg');
-    background-size: cover;
-    background-position: center;
-    height: 100vh;
-}
+
   
   .table {
     --bs-table-color: var(--bs-gray-600);

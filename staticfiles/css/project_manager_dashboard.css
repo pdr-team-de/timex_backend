@@ -88,7 +88,8 @@ body {
 
 
   .main-background {
-    background-image: url('../images/MountainsDesktop.svg');
+    background-image: url('/static/time_tracking/images/MountainsDesktop.svg');
+
     background-size: cover;
     background-position: center;
     height: 100vh;
@@ -150,13 +151,6 @@ body {
     text-decoration: none;
     color:aliceblue;
   }
-
-.main-background {
-    background-image: url('assets/images/MountainsDesktop.svg');
-    background-size: cover;
-    background-position: center;
-    height: 100vh;
-}
   
   .table {
     --bs-table-color: var(--bs-gray-600);
@@ -464,7 +458,7 @@ footer ul {
   
 @media (max-width: 768px) {
     .main-background{
-        background-image: url('../images/MountainsMobile.svg')
+        background-image: url('/static/time_tracking/images/MountainsMobile.svg');
     }
     .header-hamburger-menu{
         width: 30px;

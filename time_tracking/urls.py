@@ -1,5 +1,7 @@
 from django.urls import path
 from django.contrib.auth.views import LogoutView
+from django.views.generic import TemplateView
+from rest_framework.decorators import api_view
 from . import views
 
 urlpatterns = [
@@ -17,7 +19,10 @@ urlpatterns = [
          name='project_manager_dashboard'),
     path('generate-password/', views.generate_password_view, name='generate-password'),
     path('api/user-time-entries/<int:user_id>/', views.get_user_time_entries, name='user-time-entries'),
-    path('api/time-entries/', views.create_time_entry, name='create-time-entry'),
+    #path('api/time-entries/', views.create_time_entry, name='create-time-entry'),
+    path('api/time-entries/', 
+         views.create_time_entry, 
+         name='create-time-entry'),
     path('api/export-time-entries/', views.export_time_entries, name='export-time-entries'),
     path('api/worker/<int:worker_id>/toggle-status/', 
          views.toggle_worker_status, 
@@ -27,4 +32,8 @@ urlpatterns = [
          name='approve-time-entry'),
     path('privacy/', views.privacy_policy, name='privacy'),
     path('imprint/', views.imprint, name='imprint'),
+    path('logout/', LogoutView.as_view(
+        next_page='login',
+        template_name='time_tracking/login.html'
+    ), name='logout'),
 ]

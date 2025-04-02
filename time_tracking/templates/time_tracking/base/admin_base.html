@@ -13,7 +13,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <!-- Custom CSS -->
-    <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+    <link href="{% static 'time_tracking/css/styles.css' %}" rel="stylesheet">
     {% block extra_css %}{% endblock %}
 </head>
 <body class="admin-body">
@@ -26,11 +26,14 @@
             <div class="menu-content">
                 <button id="close-menu" class="btn btn-secondary" style="display: block; align-items: center;" >x</button>
                 <br>
-                <img src="{% static 'images/timex-logo-transparent.png' %}" alt="TimeX Logo" class="img-fluid" style="width: 100px; margin-bottom: 1em;">
+                <img src="{% static 'time_tracking/images/timex-logo-transparent.png' %}" alt="TimeX Logo" class="img-fluid" style="width: 100px; margin-bottom: 1em;">
                 <p style="font-size: smaller;">Version: 1.0.0</p>
                 <a href="datenschutz.html">Datenschutz</a>
                 <a href="impressum.html">Impressum</a>
-                <a class="btn btn-primary" href="{% url 'logout' %}">Logout</a>
+                <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">Logout</button>
+                </form>
     
                 <p style="font-size: smaller;">&copy; 2025 PDR-Team GmbH</p>
             </div>

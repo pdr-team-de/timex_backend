@@ -12,7 +12,7 @@
         {% for entry in time_entries %}
         <div class="time-tracking-container" id="time-tracking-{{ forloop.counter }}">
             <div class="time-tracking-item">
-                <img src="{% static 'icons/'|add:entry.get_icon_name|add:'.svg' %}" alt="Time Icon" class="time-icon">
+                <img src="{% static 'time_tracking/icons/'|add:entry.get_icon_name|add:'.svg' %}" alt="Time Icon" class="time-icon">
                 <div class="time-info">
                     <p class="mb-0">{{ entry.timestamp|date:"H:i" }} {{ entry.timestamp|date:"d.m.Y" }}</p>
                 </div>
@@ -26,17 +26,17 @@
     <div class="time-button-container">
         <div class="time-button-item">
             <button id="KommenAktiv" class="kommen-btn-icon" {% if last_action == 'kommen' %}disabled{% endif %}>
-                <img src="{% static 'icons/KommenAktivMitText.svg' %}" alt="Kommen Icon">
+                <img src="{% static 'time_tracking/icons/KommenAktivMitText.svg' %}" alt="Kommen Icon">
             </button>
         </div>
         <div class="time-button-item">
             <button id="GehenAktiv" class="gehen-btn-icon" {% if not last_action == 'kommen' %}disabled{% endif %}>
-                <img src="{% static 'icons/GehenAktivMitText.svg' %}" alt="Gehen Icon">
+                <img src="{% static 'time_tracking/icons/GehenAktivMitText.svg' %}" alt="Gehen Icon">
             </button>
         </div>
         <div class="time-button-item">
             <button id="FeierabendAktiv" class="feierabend-btn-icon" style="display: {% if show_feierabend %}flex{% else %}none{% endif %};">
-                <img src="{% static 'icons/FeierabendAktivMitText.svg' %}" alt="Feierabend Icon">
+                <img src="{% static 'time_tracking/icons/FeierabendAktivMitText.svg' %}" alt="Feierabend Icon">
             </button>
         </div>
     </div>
@@ -45,5 +45,5 @@
 
 {% block scripts %}
 {{ block.super }}
-<script src="{% static 'js/tracking.js' %}"></script>
+<script src="{% static 'time_tracking/js/tracking.js' %}"></script>
 {% endblock %}

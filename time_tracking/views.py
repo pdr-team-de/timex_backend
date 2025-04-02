@@ -19,9 +19,14 @@ from io import BytesIO
 import xlsxwriter
 from django.utils import timezone
 from rest_framework import viewsets
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, parser_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.parsers import JSONParser
+
 from .models import Notification
+import json
+
 
 
 # Create your views here.
@@ -110,15 +115,16 @@ class ProjectManagerDashboard(UserPassesTestMixin, ListView):
             user_type='TEMP_WORKER'
         )
         context['active_workers_count'] = context['workers'].filter(is_active=True).count()
-        # Offene Zeiteinträge
+        
+        # Change status to approval_status
         context['pending_entries'] = TimeEntry.objects.filter(
             user__project_manager=self.request.user,
-            status='PENDING'
+            approval_status='PENDING'  # Changed from status to approval_status
         ).select_related('user').order_by('-timestamp')
-        # Benachrichtigungen
+        
         context['notifications'] = Notification.objects.filter(
             user=self.request.user,
-            is_read=False
+            read=False
         ).order_by('-created_at')
         return context
     
@@ -143,7 +149,7 @@ def approve_time_entry(request, entry_id):
             id=entry_id,
             user__project_manager=request.user
         )
-        entry.status = 'APPROVED'
+        entry.approval_status = 'APPROVED'  # Changed from status to approval_status
         entry.manager_note = request.data.get('manager_note', '')
         entry.save()
         
@@ -329,35 +335,43 @@ def export_time_entries(request):
     return response
 
 @api_view(['POST'])
+@parser_classes([JSONParser])
 def create_time_entry(request):
     try:
-        # Entry erstellen
+        # Validate user type
+        if request.user.user_type != 'TEMP_WORKER':
+            return Response({
+                'status': 'error',
+                'message': 'Nur Zeitarbeitskräfte können Zeiteinträge erstellen'
+            }, status=403)
+
+        # Create entry
         entry = TimeEntry.objects.create(
             user=request.user,
-            entry_type=request.data['entry_type'],  # DRF parsed bereits request.data
-            note=request.data.get('note')
+            entry_type=request.data.get('entry_type'),
+            note=request.data.get('note'),
+            timestamp=timezone.now()
         )
-        
-        # Projektleiter benachrichtigen bei FEIERABEND
-        if entry.entry_type == 'FEIERABEND':
+
+        # Notify project manager for FEIERABEND
+        if entry.entry_type == 'FEIERABEND' and request.user.project_manager:
             Notification.objects.create(
                 user=request.user.project_manager,
                 title='Neue Zeiterfassung',
-                message=f'Zeitarbeitskraft {request.user.get_full_name()} hat Feierabend gemacht',
+                message=f'{request.user.get_full_name()} hat Feierabend gemacht',
                 entry=entry
             )
-        
-        # Response mit Entry-Daten
+
         return Response({
             'status': 'success',
             'data': {
                 'id': entry.id,
-                'type': entry.entry_type.lower(),
-                'time': entry.timestamp,
+                'type': entry.entry_type,
+                'time': entry.timestamp.isoformat(),
                 'note': entry.note
             }
         }, status=201)
-        
+
     except Exception as e:
         return Response({
             'status': 'error',

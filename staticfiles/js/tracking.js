@@ -9,19 +9,19 @@ document.addEventListener('DOMContentLoaded', function(){
     // Icon paths configuration
     const BUTTON_STATES = {
         KOMMEN: {
-            active: '../icons/KommenAktivMitText.svg',
-            inactive: '../icons/KommenInaktivMitText.svg',
-            transparent: '../icons/KommenAktivTransparent.svg'
+            active: '/static/time_tracking/icons/KommenAktivMitText.svg',
+            inactive: '/static/time_tracking/icons/KommenInaktivMitText.svg',
+            transparent: '/static/time_tracking/icons/KommenAktivTransparent.svg'
         },
         GEHEN: {
-            active: '../icons/GehenAktivMitText.svg',
-            inactive: '../icons/GehenInaktivMitText.svg',
-            transparent: '../icons/GehenAktivTransparent.svg'
+            active: '/static/time_tracking/icons/GehenAktivMitText.svg',
+            inactive: '/static/time_tracking/icons/GehenInaktivMitText.svg',
+            transparent: '/static/time_tracking/icons/GehenAktivTransparent.svg'
         },
         FEIERABEND: {
-            active: '../icons/FeierabendAktivMitText.svg',
-            inactive: '../icons/FeierabendInaktivMitText.svg',
-            transparent: '../icons/FeierabendAktivTransparent.svg'
+            active: '/static/time_tracking/icons/FeierabendAktivMitText.svg',
+            inactive: '/static/time_tracking/icons/FeierabendInaktivMitText.svg',
+            transparent: '/static/time_tracking/icons/FeierabendAktivTransparent.svg'
         }
     };
 
@@ -217,25 +217,44 @@ document.addEventListener('DOMContentLoaded', function(){
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Accept': 'application/json'
                 },
+                credentials: 'same-origin',
                 body: JSON.stringify({
                     entry_type: type,
                     note: note
                 })
             });
-
-            if (!response.ok) throw new Error('Network response was not ok');
+    
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+            }
+    
             const data = await response.json();
             
-            // Update UI with new entry
-            createTimeTrackingContainer(data);
-            updateButtonStates(type);
-            updateInfoContainer();
-
+            if (data.status === 'success') {
+                // Update UI
+                const entryData = {
+                    type: type.toLowerCase(),
+                    time: new Date(data.data.time),
+                    note: note
+                };
+                
+                createTimeTrackingContainer(entryData);
+                updateButtonStates(type.toLowerCase());
+                
+                if (type === 'FEIERABEND') {
+                    updateInfoContainer();
+                }
+            } else {
+                throw new Error(data.message || 'Unbekannter Fehler');
+            }
+    
         } catch (error) {
             console.error('Error:', error);
-            alert('Fehler beim Speichern des Zeiteintrags');
+            alert(`Fehler beim Speichern des Zeiteintrags: ${error.message}`);
         }
     }
 
