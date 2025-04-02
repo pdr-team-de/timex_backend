@@ -68,7 +68,7 @@ class TempWorkerCreationForm(BaseUserCreationForm):
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.user_type = 'TEMP_WORKER'
+        user.user_type = 'TEMP_WORKER'  # Explicitly set the user_type to TEMP_WORKER
         
         # Generate unique username
         base_username = f"{self.cleaned_data['first_name'].lower()}.{self.cleaned_data['last_name'].lower()}"

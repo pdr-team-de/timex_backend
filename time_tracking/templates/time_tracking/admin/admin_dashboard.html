@@ -197,13 +197,8 @@
                                         {% if user.user_type != 'TEMP_WORKER' %}disabled{% endif %}>
                                 </td>
                                 <td class="view-details" style="cursor: pointer;">{{ user.get_full_name }}</td>
-                                <td>{{ user.get_full_name }}</td>
                                 <td>
-                                    {% if user.user_type == 'TEMP_WORKER' %}
-                                        <span class="badge bg-info">Zeitarbeitskraft</span>
-                                    {% elif user.user_type == 'PROJECT_MANAGER' %}
-                                        <span class="badge bg-primary">Projektleiter</span>
-                                    {% endif %}
+                                    {{ user.get_user_type_display }} <!-- Corrected to display user type -->
                                 </td>
                                 <td>{{ user.station.name|default:'-' }}</td>
                                 <td>{{ user.project_manager.get_full_name|default:'-' }}</td>
