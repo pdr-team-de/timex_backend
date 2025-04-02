@@ -89,7 +89,7 @@ def time_tracking_view(request):
 
 class ProjectManagerDashboard(UserPassesTestMixin, ListView):
     model = TimeEntry
-    template_name = 'time_tracking/project_manager_dashboard.html'
+    template_name = 'time_tracking/admin/project_manager_dashboard.html'
     context_object_name = 'time_entries'
     paginate_by = 10
     ordering = ['-timestamp']
@@ -101,6 +101,63 @@ class ProjectManagerDashboard(UserPassesTestMixin, ListView):
         return TimeEntry.objects.filter(
             user__project_manager=self.request.user
         ).select_related('user')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Mitarbeiter des Projektleiters
+        context['workers'] = CustomUser.objects.filter(
+            project_manager=self.request.user,
+            user_type='TEMP_WORKER'
+        )
+        context['active_workers_count'] = context['workers'].filter(is_active=True).count()
+        # Offene Zeiteinträge
+        context['pending_entries'] = TimeEntry.objects.filter(
+            user__project_manager=self.request.user,
+            status='PENDING'
+        ).select_related('user').order_by('-timestamp')
+        # Benachrichtigungen
+        context['notifications'] = Notification.objects.filter(
+            user=self.request.user,
+            is_read=False
+        ).order_by('-created_at')
+        return context
+    
+@api_view(['POST'])
+def toggle_worker_status(request, worker_id):
+    try:
+        worker = CustomUser.objects.get(
+            id=worker_id, 
+            project_manager=request.user,
+            user_type='TEMP_WORKER'
+        )
+        worker.is_active = not worker.is_active
+        worker.save()
+        return Response({'status': 'success', 'is_active': worker.is_active})
+    except CustomUser.DoesNotExist:
+        return Response({'status': 'error'}, status=404)
+    
+@api_view(['POST'])
+def approve_time_entry(request, entry_id):
+    try:
+        entry = TimeEntry.objects.get(
+            id=entry_id,
+            user__project_manager=request.user
+        )
+        entry.status = 'APPROVED'
+        entry.manager_note = request.data.get('manager_note', '')
+        entry.save()
+        
+        # Benachrichtigung für Admin erstellen
+        Notification.objects.create(
+            user=CustomUser.objects.filter(user_type='ADMIN').first(),
+            title='Neue bestätigte Zeiterfassung',
+            message=f'Zeiterfassung von {entry.user.get_full_name()} wurde bestätigt',
+            entry=entry
+        )
+        
+        return Response({'status': 'success'})
+    except TimeEntry.DoesNotExist:
+        return Response({'status': 'error'}, status=404)
 
 class AdminDashboard(LoginRequiredMixin, UserPassesTestMixin, ListView):
     model = TimeEntry
@@ -204,7 +261,7 @@ def redirect_to_appropriate_page(request):
         if request.user.user_type == 'ADMIN':
             return redirect('admin-dashboard')
         elif request.user.user_type == 'PROJECT_MANAGER':
-            return redirect('project-manager-dashboard')
+            return redirect('project_manager_dashboard')
         else:
             return redirect('time-tracking')
     return redirect('login')
@@ -273,22 +330,39 @@ def export_time_entries(request):
 
 @api_view(['POST'])
 def create_time_entry(request):
-    entry = TimeEntry.objects.create(
-        user=request.user,
-        entry_type=request.data['entry_type'],
-        note=request.data.get('note')
-    )
-    
-    # If it's a FEIERABEND entry, notify project manager
-    if entry.entry_type == 'FEIERABEND':
-        notify_project_manager(entry)
-    
-    return Response({
-        'id': entry.id,
-        'type': entry.entry_type.lower(),
-        'time': entry.timestamp,
-        'note': entry.note
-    })
+    try:
+        # Entry erstellen
+        entry = TimeEntry.objects.create(
+            user=request.user,
+            entry_type=request.data['entry_type'],  # DRF parsed bereits request.data
+            note=request.data.get('note')
+        )
+        
+        # Projektleiter benachrichtigen bei FEIERABEND
+        if entry.entry_type == 'FEIERABEND':
+            Notification.objects.create(
+                user=request.user.project_manager,
+                title='Neue Zeiterfassung',
+                message=f'Zeitarbeitskraft {request.user.get_full_name()} hat Feierabend gemacht',
+                entry=entry
+            )
+        
+        # Response mit Entry-Daten
+        return Response({
+            'status': 'success',
+            'data': {
+                'id': entry.id,
+                'type': entry.entry_type.lower(),
+                'time': entry.timestamp,
+                'note': entry.note
+            }
+        }, status=201)
+        
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'message': str(e)
+        }, status=400)
 
 def notify_project_manager(entry):
     # Add notification for project manager
