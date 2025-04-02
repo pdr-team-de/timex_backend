@@ -4,6 +4,9 @@ from .forms import TempWorkerCreationForm
 from .models import TimeEntry, CustomUser, Station, Zeitarbeitsfirma
 from .forms import ProjectManagerCreationForm, TempWorkerCreationForm, TempFirmCreationForm
 from django.contrib import messages
+import logging
+from django.urls import reverse
+
 from django.http import JsonResponse
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -26,6 +29,7 @@ from rest_framework.parsers import JSONParser
 
 from .models import Notification
 import json
+logger = logging.getLogger(__name__)
 
 
 
@@ -253,14 +257,31 @@ class AdminDashboard(LoginRequiredMixin, UserPassesTestMixin, ListView):
 class CustomLoginView(LoginView):
     template_name = 'time_tracking/login.html'
     
+    def form_valid(self, form):
+        """Log successful logins"""
+        response = super().form_valid(form)
+        logger.info(f"Successful login for user: {self.request.user} (type: {self.request.user.user_type})")
+        return response
+
+    def form_invalid(self, form):
+        """Log failed login attempts"""
+        logger.warning(f"Failed login attempt: {form.errors}")
+        messages.error(self.request, 'Ungültige Anmeldedaten. Bitte versuchen Sie es erneut.')
+        return super().form_invalid(form)
+    
     def get_success_url(self):
+        """Return the URL to redirect to after successful login"""
         user = self.request.user
-        if user.user_type == 'ADMIN':
-            return '/dashboard/admin/'  # Updated URL
-        elif user.user_type == 'PROJECT_MANAGER':
-            return '/project-manager/dashboard/'
-        else:
-            return '/tracking/'
+        try:
+            if user.user_type == 'ADMIN':
+                return reverse('admin-dashboard')
+            elif user.user_type == 'PROJECT_MANAGER':
+                return reverse('project_manager_dashboard')
+            else:
+                return reverse('time-tracking')
+        except Exception as e:
+            logger.error(f"Error in get_success_url for user {user}: {str(e)}")
+            return reverse('login')
 
 def redirect_to_appropriate_page(request):
     if request.user.is_authenticated:

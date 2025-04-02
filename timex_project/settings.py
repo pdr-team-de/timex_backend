@@ -60,6 +60,10 @@ INSTALLED_APPS = [
     'rest_framework',
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 AUTH_USER_MODEL = 'time_tracking.CustomUser'
 
 MIDDLEWARE = [
@@ -178,16 +182,30 @@ STATICFILES_FINDERS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGGING = {
-    'version': 1,
+     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
         },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'debug.log',
+        },
     },
     'loggers': {
         'django.request': {
-            'handlers': ['console'],
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'django.auth': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'time_tracking': {  # Add this for your app's logging
+            'handlers': ['console', 'file'],
             'level': 'DEBUG',
             'propagate': True,
         },
