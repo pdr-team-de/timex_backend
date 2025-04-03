@@ -267,3 +267,5 @@ Traceback (most recent call last):
 TypeError: cannot unpack non-iterable CustomUser object
 Not Found: /favicon.ico
 Not Found: /favicon.ico
+Method Not Allowed (GET): /logout/
+Method Not Allowed: /logout/

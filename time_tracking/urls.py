@@ -25,7 +25,7 @@ urlpatterns = [
     path('api/user-time-entries/<int:user_id>/', views.get_user_time_entries, name='user-time-entries'),
     path('api/user/<int:user_id>/edit/', views.edit_user, name='edit-user'),
     path('api/user/<int:user_id>/delete/', views.delete_user, name='delete-user'),
-    
+
     #path('api/time-entries/', views.create_time_entry, name='create-time-entry'),
     path('api/time-entries/', 
          views.create_time_entry, 

@@ -64,8 +64,11 @@ class AdminCreationForm(BaseUserCreationForm):
         base_username = f"{self.cleaned_data['first_name'].lower()}.{self.cleaned_data['last_name'].lower()}"
         user.username = generate_unique_username(base_username, CustomUser)
         
-        # Use generated password or generate new one
-        password = self.cleaned_data.get('generated_password') or generate_password()
+       # Wichtig: Verwenden Sie das generierte Passwort direkt
+        password = self.cleaned_data.get('generated_password')
+        if not password:
+            password = generate_password()
+        
         user.set_password(password)
         
         if commit:

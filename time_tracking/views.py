@@ -243,19 +243,17 @@ def create_admin(request):
     if request.method == 'POST':
         form = AdminCreationForm(request.POST)
         if form.is_valid():
-            user, password = form.save()
+            user = form.save()
             messages.success(request, 
                 f'Admin-Account wurde erfolgreich erstellt.\nZugangsdaten wurden per E-Mail an {user.email} gesendet.')
             return redirect('admin-dashboard')
     else:
-        form = AdminCreationForm()
         initial_password = generate_password()
-        request.session['temp_password'] = initial_password
-        form.fields['generated_password'].initial = initial_password
+        form = AdminCreationForm(initial={'generated_password': initial_password})
     
     return render(request, 'time_tracking/admin/create-admin/create_admin.html', {
         'form': form,
-        'initial_password': request.session.get('temp_password', '')
+        'initial_password': form.initial.get('generated_password', '')
     })
 
 @user_passes_test(lambda u: u.user_type == 'ADMIN')

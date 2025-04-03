@@ -46,8 +46,7 @@
                                        readonly 
                                        value="{{ initial_password }}"
                                        style="background-color: #fff;">
-                                <button type="button" class="btn btn-outline-secondary" id="regeneratePassword">
-                                    <i class="fas fa-sync-alt"></i>
+                                
                                 </button>
                                 <button type="button" class="btn btn-outline-secondary" id="copyPassword">
                                     <i class="fas fa-copy"></i>
@@ -73,7 +72,6 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Toast container setup
     const toastContainer = document.createElement('div');
     toastContainer.innerHTML = `
         <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050">
@@ -90,7 +88,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const toast = new bootstrap.Toast(document.getElementById('notificationToast'));
     const generatedPasswordInput = document.getElementById('generatedPassword');
     const hiddenPasswordInput = document.getElementById('hiddenPassword');
-    const regenerateBtn = document.getElementById('regeneratePassword');
     const copyBtn = document.getElementById('copyPassword');
     const form = document.getElementById('createTempWorkerForm');
 
@@ -98,46 +95,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const toastEl = document.getElementById('notificationToast');
         toastEl.querySelector('.toast-body').textContent = message;
         toast.show();
-    }
-
-    async function generateNewPassword() {
-        try {
-            console.log('Generating new password...');
-            regenerateBtn.disabled = true;
-            const response = await fetch("{% url 'generate-password' %}", {
-                method: 'GET',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                    'Accept': 'application/json'
-                }
-            });
-
-            console.log('Response:', response);
-            const data = await response.json();
-            console.log('Data:', data);
-
-            if (!response.ok) {
-                throw new Error('Fehler beim Generieren des Passworts');
-            }
-
-            if (data.status === 'success' && data.password) {
-                generatedPasswordInput.value = data.password;
-                hiddenPasswordInput.value = data.password;
-                
-                // Visual feedback
-                generatedPasswordInput.classList.add('bg-light');
-                setTimeout(() => {
-                    generatedPasswordInput.classList.remove('bg-light');
-                }, 200);
-                
-                showToast('Neues Passwort wurde generiert');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            showToast('Fehler beim Generieren des Passworts');
-        } finally {
-            regenerateBtn.disabled = false;
-        }
     }
 
     // Copy password button
@@ -154,49 +111,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Regenerate password button
-    regenerateBtn.addEventListener('click', async function(e) {
-        e.preventDefault();
-        try {
-            regenerateBtn.disabled = true;
-            const response = await fetch("{% url 'generate-password' %}", {
-                method: 'GET',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                    'Accept': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error('Fehler beim Generieren des Passworts');
-            }
-
-            const data = await response.json();
-            if (data.status === 'success' && data.password) {
-                generatedPasswordInput.value = data.password;
-                hiddenPasswordInput.value = data.password;
-                
-                // Visual feedback
-                generatedPasswordInput.classList.add('bg-light');
-                setTimeout(() => {
-                    generatedPasswordInput.classList.remove('bg-light');
-                }, 200);
-                
-                showToast('Neues Passwort wurde generiert');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            showToast('Fehler beim Generieren des Passworts');
-        } finally {
-            regenerateBtn.disabled = false;
-        }
-    });
-
     // Form submission
     form.addEventListener('submit', function(e) {
         if (!generatedPasswordInput.value) {
             e.preventDefault();
-            showToast('Bitte generieren Sie zuerst ein Passwort');
+            showToast('Kein gültiges Passwort vorhanden');
             return;
         }
         hiddenPasswordInput.value = generatedPasswordInput.value;

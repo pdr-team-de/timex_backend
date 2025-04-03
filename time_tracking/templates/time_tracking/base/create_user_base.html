@@ -32,7 +32,15 @@
                 <p style="font-size: smaller;">Version: 1.0.0</p>
                 <a href="datenschutz.html">Datenschutz</a>
                 <a href="impressum.html">Impressum</a>
-                <a class="btn btn-primary" href="{% url 'logout' %}">Logout</a>
+                <form id="logout-form" action="{% url 'logout' %}" method="post" style="display: none;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">Logout</button>
+
+                </form>
+                
+                <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                    Logout
+                </a>
     
                 <p style="font-size: smaller;">&copy; 2025 PDR-Team GmbH</p>
             </div>
@@ -66,6 +74,18 @@
                     menuOverlay.style.display = 'none';
                 }
             });
+
+            function handleLogout() {
+                const form = document.getElementById('logout-form');
+                if (form) {
+                    // Clear any stored session data
+                    sessionStorage.clear();
+                    localStorage.clear();
+                    
+                    // Submit the logout form
+                    form.submit();
+                }
+            }
         });
         </script>
     {% endblock %}
