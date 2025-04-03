@@ -10,12 +10,14 @@ urlpatterns = [
     path('logout/', views.CustomLogoutView.as_view(), name='logout'),
 
     path('tracking/', views.time_tracking_view, name='time-tracking'),
-    path('dashboard/admin/', views.AdminDashboard.as_view(), name='admin-dashboard'),  # Changed
-    path('dashboard/admin/', views.ProjectManagerDashboard.as_view(), name='project-manager-dashboard'),  # Changed
-    path('dashboard/admin/create-admin/', views.create_admin, name='create-admin'),  # Changed
-    path('dashboard/admin/project-manager/', views.create_project_manager, name='create-project-manager'),  # Changed
-    path('dashboard/admin/temp-worker/', views.create_temp_worker, name='create-temp-worker'),  # Changed
-    path('dashboard/admin/temp-firm/', views.create_temp_firm, name='create-temp-firm'),  # Changed
+    path('dashboard/admin/', views.AdminDashboard.as_view(), name='admin-dashboard'),  
+    path('dashboard/admin/', views.ProjectManagerDashboard.as_view(), name='project-manager-dashboard'),  
+    path('dashboard/admin/create-admin/', views.create_admin, name='create-admin'),  
+    path('dashboard/admin/project-manager/', views.create_project_manager, name='create-project-manager'), 
+    path('dashboard/admin/temp-worker/', views.create_temp_worker, name='create-temp-worker'),  
+    path('dashboard/admin/temp-firm/', views.create_temp_firm, name='create-temp-firm'),  
+    path('dashboard/admin/station/', views.create_station, name='create-station'),  
+
     path('project-manager/dashboard/', 
          views.ProjectManagerDashboard.as_view(),
          name='project_manager_dashboard'),

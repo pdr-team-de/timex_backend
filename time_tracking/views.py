@@ -8,7 +8,7 @@ from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth import logout
 from django.views.decorators.http import require_http_methods
 from .models import TimeEntry, CustomUser, Station, Zeitarbeitsfirma, Notification
-from .forms import AdminCreationForm, ProjectManagerCreationForm, TempWorkerCreationForm, TempFirmCreationForm, generate_password
+from .forms import AdminCreationForm, ProjectManagerCreationForm, TempWorkerCreationForm, StationCreationForm, TempFirmCreationForm, generate_password
 from django.shortcuts import render , redirect
 
 from django.urls import reverse, reverse_lazy
@@ -296,7 +296,16 @@ def create_temp_firm(request):
 
 @user_passes_test(lambda u: u.user_type == 'ADMIN')
 def create_station(request):
-    pass
+    if request.method == 'POST':
+        form = StationCreationForm(request.POST)
+        if form.is_valid():
+            station = form.save()
+            messages.success(request, f'Station {station.name} at {station.location} created successfully.')
+            return redirect('admin-dashboard')
+    else:
+        form = StationCreationForm()  # Initialize form for GET request
+        
+    return render(request, 'time_tracking/admin/station/create_station.html', {'form': form})
 
 @login_required
 def time_tracking_view(request):

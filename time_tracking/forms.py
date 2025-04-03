@@ -173,6 +173,23 @@ class TempFirmCreationForm(forms.ModelForm):
             temp_firm.save()
         return temp_firm
 
+class StationCreationForm(forms.ModelForm):
+    class Meta:
+        model = Station
+        fields = ('name', 'location')
+        labels = {
+            'name': 'Name',
+            'location': 'Standort'
+        }
+
+    def save(self, commit=True):
+        station = super().save(commit=False)
+        station.name = self.cleaned_data['name']
+        station.location = self.cleaned_data['location']
+        if commit:
+            station.save()
+        return station
+
 def generate_password():
     lowercase = ''.join(random.choices(string.ascii_lowercase, k=2))
     uppercase = ''.join(random.choices(string.ascii_uppercase, k=3))
