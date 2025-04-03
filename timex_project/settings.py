@@ -189,10 +189,24 @@ USE_TZ = True
 
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "time_tracking/static"),
-]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'time_tracking/static'),
+]
+
+# Fügen Sie den MIME-Type hinzu
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+
+# Definieren Sie die korrekten MIME-Types
+MIME_TYPES = {
+    'js': 'application/javascript',
+    'css': 'text/css',
+    'png': 'image/png',
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'ico': 'image/x-icon',
+}
 
 LOGIN_REDIRECT_URL = 'login'
 
