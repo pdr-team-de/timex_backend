@@ -547,21 +547,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-
     function populateTimeEntriesTable(entries) {
         const tbody = document.getElementById('timeEntriesBody');
         tbody.innerHTML = '';
@@ -629,80 +614,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     
 });
-// Edit and Delete buttons
-document.querySelectorAll('.btn-outline-primary').forEach(button => {
-    button.addEventListener('click', async function(e) {
-        e.preventDefault();
-        const row = this.closest('tr');
-        const userId = row.dataset.userId;
-        const userName = row.querySelector('.view-details').textContent;
-        
-        // Open edit modal
-        const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
-        try {
-            const response = await fetch(`/api/user/${userId}/edit/`);
-            if (!response.ok) throw new Error('Network response was not ok');
-            const userData = await response.json();
-            populateEditForm(userData);
-            modal.show();
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Fehler beim Laden der Benutzerdaten');
-        }
-    });
-});
 
-document.querySelectorAll('.btn-outline-danger').forEach(button => {
-    button.addEventListener('click', async function(e) {
-        e.preventDefault();
-        const row = this.closest('tr');
-        const userId = row.dataset.userId;
-        const userName = row.querySelector('.view-details').textContent;
-
-        // Show confirmation dialog
-        if (confirm(`Möchten Sie den Benutzer "${userName}" wirklich löschen?`)) {
-            try {
-                const response = await fetch(`/api/user/${userId}/delete/`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
-                });
-
-                if (!response.ok) throw new Error('Network response was not ok');
-
-                // Remove row from table
-                row.remove();
-                showToast('success', 'Benutzer wurde erfolgreich gelöscht');
-            } catch (error) {
-                console.error('Error:', error);
-                showToast('error', 'Fehler beim Löschen des Benutzers');
-            }
-        }
-    });
-});
-
-// Add toast function if not already present
-function showToast(type, message) {
-    const toastContainer = document.createElement('div');
-    toastContainer.innerHTML = `
-        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050">
-            <div class="toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'}" role="alert" aria-live="assertive" aria-atomic="true">
-                <div class="d-flex">
-                    <div class="toast-body">${message}</div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                </div>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(toastContainer);
-    const toast = new bootstrap.Toast(toastContainer.querySelector('.toast'));
-    toast.show();
-    
-    // Remove toast container after it's hidden
-    toastContainer.querySelector('.toast').addEventListener('hidden.bs.toast', () => {
-        toastContainer.remove();
-    });
-}
 </script>
 {% endblock %}
