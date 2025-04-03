@@ -34,6 +34,25 @@
                             {% endif %}
                         </div>
                         {% endfor %}
+                        <!-- Password Generator Section -->
+                        <div class="mb-3">
+                            <label class="form-label">Generiertes Passwort</label>
+                            <div class="input-group">
+                                <input type="text" 
+                                       id="generatedPassword" 
+                                       class="form-control" 
+                                       readonly 
+                                       value="{{ initial_password }}"
+                                       style="background-color: #fff;">
+                                
+                                <button type="button" class="btn btn-outline-secondary" id="copyPassword">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">Dieses Passwort wird automatisch an den Benutzer per E-Mail gesendet.</small>
+                        </div>
+
+                        <input type="hidden" name="generated_password" id="hiddenPassword" value="{{ initial_password }}">
                         <button type="submit" class="btn btn-primary">Create Account</button>
                         <a href="{% url 'admin-dashboard' %}" class="btn btn-secondary">Cancel</a>
                     </form>
@@ -42,4 +61,84 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+     // Toast container setup
+    const toastContainer = document.createElement('div');
+    toastContainer.innerHTML = `
+        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050">
+            <div id="notificationToast" class="toast align-items-center text-white bg-success" role="alert" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body"></div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(toastContainer);
+
+    const toast = new bootstrap.Toast(document.getElementById('notificationToast'));
+    const generatedPasswordInput = document.getElementById('generatedPassword');
+    const hiddenPasswordInput = document.getElementById('hiddenPassword');
+    const copyBtn = document.getElementById('copyPassword');
+    const form = document.getElementById('createAdminForm');
+
+    function showToast(message) {
+        const toastEl = document.getElementById('notificationToast');
+        toastEl.querySelector('.toast-body').textContent = message;
+        toast.show();
+    }
+
+    // Copy password button
+    copyBtn.addEventListener('click', async function(e) {
+        e.preventDefault();
+        try {
+            await navigator.clipboard.writeText(generatedPasswordInput.value);
+            showToast('Passwort wurde in die Zwischenablage kopiert');
+        } catch (err) {
+            // Fallback for older browsers
+            generatedPasswordInput.select();
+            document.execCommand('copy');
+            showToast('Passwort wurde in die Zwischenablage kopiert');
+        }
+    });
+
+    // Form submission
+    form.addEventListener('submit', function(e) {
+        if (!generatedPasswordInput.value) {
+            e.preventDefault();
+            showToast('Kein gültiges Passwort vorhanden');
+            return;
+        }
+        hiddenPasswordInput.value = generatedPasswordInput.value;
+    });
+
+    // Set initial password to hidden input
+    if (generatedPasswordInput.value) {
+        hiddenPasswordInput.value = generatedPasswordInput.value;
+    }
+});
+</script>
+{% endblock %}
+{% block extra_css %}
+<style>
+    .bg-light {
+        transition: background-color 0.2s;
+    }
+
+    #generatedPassword.bg-light {
+        background-color: #e9ecef !important;
+    }
+
+    .toast {
+        opacity: 0.9;
+    }
+
+    .toast.bg-success {
+        background-color: #28a745 !important;
+    }
+</style>
 {% endblock %}

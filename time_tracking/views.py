@@ -271,16 +271,45 @@ def create_temp_worker(request):
 
 @user_passes_test(lambda u: u.user_type == 'ADMIN')
 def create_project_manager(request):
+    #Clear any existing messages at the start
+    storage = messages.get_messages(request)
+    storage.used = True
     if request.method == 'POST':
         form = ProjectManagerCreationForm(request.POST)
         if form.is_valid():
-            user = form.save()  # Get only the user object
-            messages.success(request, 
-                f'Projektleiter-Account wurde erfolgreich erstellt.\nZugangsdaten wurden per E-Mail an {user.email} gesendet.')
+            password = request.session.get('temp_password')
+            if not password:
+                messages.error(request, 'Password generation error. Please try again.')
+                return redirect('create-project-manager')
+            
+            user = form.save(commit=False)
+            user.set_password(password)
+            user.save()
+            
+            # Send welcome email with credentials
+            try:
+                form.send_credentials_email(user, password)
+                messages.success(request, 
+                    f'Projektleiter-Account wurde erfolgreich erstellt.\nZugangsdaten wurden per E-Mail an {user.email} gesendet.')
+            except Exception as e:
+                messages.warning(request, 
+                    f'Account erstellt, aber E-Mail konnte nicht gesendet werden: {str(e)}')
+            
+            # Clear the temporary password
+            if 'temp_password' in request.session:
+                del request.session['temp_password']
+                
             return redirect('admin-dashboard')
     else:
         form = ProjectManagerCreationForm()
-    return render(request, 'time_tracking/admin/project-manager/create_project_manager.html', {'form': form})
+        initial_password = generate_password()
+        request.session['temp_password'] = initial_password
+    
+    return render(request, 'time_tracking/admin/project-manager/create_project_manager.html', {
+        'form': form,
+        'initial_password': initial_password
+    })
+       
 
 @user_passes_test(lambda u: u.user_type == 'ADMIN')
 def create_temp_firm(request):
