@@ -15,9 +15,9 @@ class BaseUserCreationForm(forms.ModelForm):
         try:
             subject = 'Ihre Zugangsdaten - TimeX by PDR-Team'
             message = f"""
-            Sehr geehrte(r) {user.first_name} {user.last_name},
+            Hallo {user.first_name} {user.last_name},
 
-            Ihre Zugangsdaten für das PDR Zeiterfassungssystem lauten:
+            Ihre Zugangsdaten für das PDR Zeiterfassungssystem TimeX lauten:
             
             Benutzername: {user.username}
             Passwort: {password}
