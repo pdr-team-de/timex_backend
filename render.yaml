@@ -9,6 +9,12 @@ services:
         fromDatabase:
           name: timex_db
           property: connectionString
+      - key: RENDER
+        value: true
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ADMIN_PASSWORD
+        sync: false  # This means the value needs to be set manually in Render dashboard
     dependencies:
       - name: timex_db
 
