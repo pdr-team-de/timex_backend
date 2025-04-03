@@ -5,6 +5,10 @@ services:
     buildCommand: "./build.sh"
     startCommand: "gunicorn timex_project.wsgi:application"
     envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: timex_db
+          property: connectionString
       - key: SECRET_KEY
         generateValue: true
       - key: PYTHON_VERSION
@@ -15,3 +19,9 @@ services:
         sync: false
       - key: EMAIL_HOST_PASSWORD
         sync: false
+
+databases:
+  - name: timex_db
+    plan: free
+    databaseName: timex_db
+    ipAllowList: []
