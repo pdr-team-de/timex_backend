@@ -213,7 +213,8 @@ def create_admin(request):
     if request.method == 'POST':
         form = AdminCreationForm(request.POST)
         if form.is_valid():
-            user = form.save()  # Get only the user object
+            result = form.save()  # Get dictionary with user and password
+            user = result['user']  # Extract user from dictionary
             messages.success(request, 
                 f'Admin-Account wurde erfolgreich erstellt.\nZugangsdaten wurden per E-Mail an {user.email} gesendet.')
             return redirect('admin-dashboard')
