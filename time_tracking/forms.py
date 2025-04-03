@@ -22,8 +22,6 @@ class BaseUserCreationForm(forms.ModelForm):
             Benutzername: {user.username}
             Passwort: {password}
             
-            Bitte ändern Sie Ihr Passwort bei der ersten Anmeldung.
-            
             Mit freundlichen Grüßen
             Ihr PDR-Team
             """
@@ -41,6 +39,41 @@ class BaseUserCreationForm(forms.ModelForm):
             # For now, we'll still create the user but log the email failure
             pass
 
+class AdminCreationForm(BaseUserCreationForm):
+    generated_password = forms.CharField(widget=forms.HiddenInput(), required=False)
+
+    class Meta:
+        model = CustomUser
+        fields = ('first_name', 'last_name', 'email')
+        labels = {
+            'first_name': 'Vorname',
+            'last_name': 'Nachname',
+            'email': 'E-Mail'
+        }
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'})
+        }
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.user_type = 'ADMIN'
+        
+        # Generate unique username
+        base_username = f"{self.cleaned_data['first_name'].lower()}.{self.cleaned_data['last_name'].lower()}"
+        user.username = generate_unique_username(base_username, CustomUser)
+        
+        # Use generated password or generate new one
+        password = self.cleaned_data.get('generated_password') or generate_password()
+        user.set_password(password)
+        
+        if commit:
+            user.save()
+            self.send_credentials_email(user, password)
+        
+        return user, password
+
 class TempWorkerCreationForm(BaseUserCreationForm):
     station = forms.ModelChoiceField(
         queryset=Station.objects.all(),
@@ -48,7 +81,8 @@ class TempWorkerCreationForm(BaseUserCreationForm):
     )
     project_manager = forms.ModelChoiceField(
         queryset=CustomUser.objects.filter(user_type='PROJECT_MANAGER'),
-        label='Projektleiter'
+        label='Projektleiter' # kann ich hier definieren, dass nur die Projektleiter aus der ausgewählten Station angezeigt werden?
+        # queryset=CustomUser.objects.filter(user_type='PROJECT_MANAGER', station__id=station_id),
     )
     zeitarbeitsfirma = forms.ModelChoiceField(
         queryset=Zeitarbeitsfirma.objects.all(),
@@ -59,7 +93,7 @@ class TempWorkerCreationForm(BaseUserCreationForm):
 
     class Meta:
         model = CustomUser
-        fields = ('first_name', 'last_name', 'email', 'station', 'project_manager', 'zeitarbeitsfirma')
+        fields = ('first_name', 'last_name', 'email', 'project_manager', 'zeitarbeitsfirma')
         labels = {
             'first_name': 'Vorname',
             'last_name': 'Nachname',

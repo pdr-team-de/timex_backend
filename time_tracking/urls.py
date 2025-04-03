@@ -12,6 +12,7 @@ urlpatterns = [
     path('tracking/', views.time_tracking_view, name='time-tracking'),
     path('dashboard/admin/', views.AdminDashboard.as_view(), name='admin-dashboard'),  # Changed
     path('dashboard/admin/', views.ProjectManagerDashboard.as_view(), name='project-manager-dashboard'),  # Changed
+    path('dashboard/admin/create-admin/', views.create_admin, name='create-admin'),  # Changed
     path('dashboard/admin/project-manager/', views.create_project_manager, name='create-project-manager'),  # Changed
     path('dashboard/admin/temp-worker/', views.create_temp_worker, name='create-temp-worker'),  # Changed
     path('dashboard/admin/temp-firm/', views.create_temp_firm, name='create-temp-firm'),  # Changed
@@ -19,7 +20,12 @@ urlpatterns = [
          views.ProjectManagerDashboard.as_view(),
          name='project_manager_dashboard'),
     path('generate-password/', views.generate_password_view, name='generate-password'),
+    path('api/generate-password/', views.generate_password_api, name='generate-password-api'),
+
     path('api/user-time-entries/<int:user_id>/', views.get_user_time_entries, name='user-time-entries'),
+    path('api/user/<int:user_id>/edit/', views.edit_user, name='edit-user'),
+    path('api/user/<int:user_id>/delete/', views.delete_user, name='delete-user'),
+    
     #path('api/time-entries/', views.create_time_entry, name='create-time-entry'),
     path('api/time-entries/', 
          views.create_time_entry, 

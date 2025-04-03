@@ -1,7 +1,7 @@
 {% extends "time_tracking/base/create_user_base.html" %}
 {% load static %}
 
-{% block title %}Zeitarbeitskraft erstellen{% endblock %}
+{% block title %}Admin erstellen{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
@@ -9,7 +9,7 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
-                    <h2>Zeitarbeitskraft erstellen</h2>
+                    <h2>Admin Account erstellen</h2>
                 </div>
                 <div class="card-body">
                     {% if messages %}
@@ -20,7 +20,7 @@
                     </div>
                     {% endif %}
                     
-                    <form method="post" id="createTempWorkerForm">
+                    <form method="post" id="createAdminForm">
                         {% csrf_token %}
                         {% for field in form %}
                             {% if field.name != 'generated_password' %}
@@ -56,7 +56,7 @@
                             <small class="text-muted">Dieses Passwort wird automatisch an den Benutzer per E-Mail gesendet.</small>
                         </div>
 
-                        <input type="hidden" name="generated_password" id="hiddenPassword">
+                        <input type="hidden" name="generated_password" id="hiddenPassword" value="{{ initial_password }}">
 
                         <div class="d-flex justify-content-between">
                             <button type="submit" class="btn btn-primary">Account erstellen</button>
@@ -73,8 +73,8 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Toast container setup
-    const toastContainer = document.createElement('div');
+     // Toast container setup
+     const toastContainer = document.createElement('div');
     toastContainer.innerHTML = `
         <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050">
             <div id="notificationToast" class="toast align-items-center text-white bg-success" role="alert" aria-atomic="true">
@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const hiddenPasswordInput = document.getElementById('hiddenPassword');
     const regenerateBtn = document.getElementById('regeneratePassword');
     const copyBtn = document.getElementById('copyPassword');
-    const form = document.getElementById('createTempWorkerForm');
+    const form = document.getElementById('createAdminForm');
 
     function showToast(message) {
         const toastEl = document.getElementById('notificationToast');
@@ -100,11 +100,13 @@ document.addEventListener('DOMContentLoaded', function() {
         toast.show();
     }
 
-    async function generateNewPassword() {
+    // Regenerate password button
+    regenerateBtn.addEventListener('click', async function(e) {
+        e.preventDefault();
+        console.log('Regenerate button clicked');
         try {
-            console.log('Generating new password...');
             regenerateBtn.disabled = true;
-            const response = await fetch("{% url 'generate-password' %}", {
+            const response = await fetch("{% url 'generate-password-api' %}", {
                 method: 'GET',
                 headers: {
                     'X-CSRFToken': '{{ csrf_token }}',
@@ -113,12 +115,12 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             console.log('Response:', response);
-            const data = await response.json();
-            console.log('Data:', data);
-
             if (!response.ok) {
-                throw new Error('Fehler beim Generieren des Passworts');
+                throw new Error('Server response was not ok');
             }
+
+            const data = await response.json();
+            console.log('Data received:', data);
 
             if (data.status === 'success' && data.password) {
                 generatedPasswordInput.value = data.password;
@@ -138,7 +140,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } finally {
             regenerateBtn.disabled = false;
         }
-    }
+    });
 
     // Copy password button
     copyBtn.addEventListener('click', async function(e) {
@@ -151,44 +153,6 @@ document.addEventListener('DOMContentLoaded', function() {
             generatedPasswordInput.select();
             document.execCommand('copy');
             showToast('Passwort wurde in die Zwischenablage kopiert');
-        }
-    });
-
-    // Regenerate password button
-    regenerateBtn.addEventListener('click', async function(e) {
-        e.preventDefault();
-        try {
-            regenerateBtn.disabled = true;
-            const response = await fetch("{% url 'generate-password' %}", {
-                method: 'GET',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                    'Accept': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error('Fehler beim Generieren des Passworts');
-            }
-
-            const data = await response.json();
-            if (data.status === 'success' && data.password) {
-                generatedPasswordInput.value = data.password;
-                hiddenPasswordInput.value = data.password;
-                
-                // Visual feedback
-                generatedPasswordInput.classList.add('bg-light');
-                setTimeout(() => {
-                    generatedPasswordInput.classList.remove('bg-light');
-                }, 200);
-                
-                showToast('Neues Passwort wurde generiert');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            showToast('Fehler beim Generieren des Passworts');
-        } finally {
-            regenerateBtn.disabled = false;
         }
     });
 

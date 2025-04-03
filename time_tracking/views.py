@@ -6,8 +6,9 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import UserPassesTestMixin, LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth import logout
+from django.views.decorators.http import require_http_methods
 from .models import TimeEntry, CustomUser, Station, Zeitarbeitsfirma, Notification
-from .forms import ProjectManagerCreationForm, TempWorkerCreationForm, TempFirmCreationForm
+from .forms import AdminCreationForm, ProjectManagerCreationForm, TempWorkerCreationForm, TempFirmCreationForm, generate_password
 from django.shortcuts import render , redirect
 
 from django.urls import reverse, reverse_lazy
@@ -168,15 +169,35 @@ def is_admin(user):
 def is_project_manager(user):
     return user.user_type == 'PROJECT_MANAGER'
 
-@api_view(['GET'])
+@require_http_methods(["GET"])
+def generate_password_api(request):
+    """API endpoint to generate a new password"""
+    try:
+        new_password = generate_password()
+        return JsonResponse({
+            'status': 'success',
+            'password': new_password
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=400)
+
+@require_http_methods(["GET"])
 def generate_password_view(request):
     """Generate a new password and return it as JSON"""
-    password = generate_password()
-    request.session['temp_password'] = password  # Store in session
-    return JsonResponse({
-        'status': 'success',
-        'password': password
-    })
+    try:
+        password = generate_password()
+        return JsonResponse({
+            'status': 'success',
+            'password': password
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=400)
 
 class ProjectManagerDashboard(UserPassesTestMixin, ListView):
     model = TimeEntry
@@ -213,6 +234,29 @@ class ProjectManagerDashboard(UserPassesTestMixin, ListView):
             read=False
         ).order_by('-created_at')
         return context
+    
+@user_passes_test(lambda u: u.user_type == 'ADMIN')
+def create_admin(request):
+    storage = messages.get_messages(request)
+    storage.used = True
+
+    if request.method == 'POST':
+        form = AdminCreationForm(request.POST)
+        if form.is_valid():
+            user, password = form.save()
+            messages.success(request, 
+                f'Admin-Account wurde erfolgreich erstellt.\nZugangsdaten wurden per E-Mail an {user.email} gesendet.')
+            return redirect('admin-dashboard')
+    else:
+        form = AdminCreationForm()
+        initial_password = generate_password()
+        request.session['temp_password'] = initial_password
+        form.fields['generated_password'].initial = initial_password
+    
+    return render(request, 'time_tracking/admin/create-admin/create_admin.html', {
+        'form': form,
+        'initial_password': request.session.get('temp_password', '')
+    })
 
 @user_passes_test(lambda u: u.user_type == 'ADMIN')
 def create_temp_worker(request):
@@ -475,6 +519,58 @@ def notify_project_manager(entry):
         message=f'Zeiterfassung von {entry.user.get_full_name()} vom {entry.timestamp.date()}',
         entry=entry
     )
+
+@api_view(['GET', 'PUT'])
+def edit_user(request, user_id):
+    try:
+        user = CustomUser.objects.get(id=user_id)
+        
+        if request.method == 'GET':
+            return JsonResponse({
+                'id': user.id,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'email': user.email,
+                'user_type': user.user_type,
+                'station': user.station.id if user.station else None,
+                'project_manager': user.project_manager.id if user.project_manager else None,
+                'zeitarbeitsfirma': user.zeitarbeitsfirma.id if user.zeitarbeitsfirma else None,
+                'is_active': user.is_active
+            })
+        
+        elif request.method == 'PUT':
+            # Update user data
+            data = json.loads(request.body)
+            user.first_name = data.get('first_name', user.first_name)
+            user.last_name = data.get('last_name', user.last_name)
+            user.email = data.get('email', user.email)
+            user.is_active = data.get('is_active', user.is_active)
+            
+            if 'station' in data and data['station']:
+                user.station_id = data['station']
+            if 'project_manager' in data and data['project_manager']:
+                user.project_manager_id = data['project_manager']
+            if 'zeitarbeitsfirma' in data and data['zeitarbeitsfirma']:
+                user.zeitarbeitsfirma_id = data['zeitarbeitsfirma']
+                
+            user.save()
+            return JsonResponse({'status': 'success'})
+            
+    except CustomUser.DoesNotExist:
+        return JsonResponse({'error': 'User not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+@api_view(['DELETE'])
+def delete_user(request, user_id):
+    try:
+        user = CustomUser.objects.get(id=user_id)
+        user.delete()
+        return JsonResponse({'status': 'success'})
+    except CustomUser.DoesNotExist:
+        return JsonResponse({'error': 'User not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
 
 def imprint(request):
     return render(request, 'time_tracking/legal/imprint.html')
