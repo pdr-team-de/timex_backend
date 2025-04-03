@@ -7,7 +7,8 @@ from . import views
 urlpatterns = [
     path('', views.redirect_to_appropriate_page, name='home'),
     path('login/', views.CustomLoginView.as_view(), name='login'),
-    path('logout/', LogoutView.as_view(), name='logout'),
+    path('logout/', views.CustomLogoutView.as_view(), name='logout'),
+
     path('tracking/', views.time_tracking_view, name='time-tracking'),
     path('dashboard/admin/', views.AdminDashboard.as_view(), name='admin-dashboard'),  # Changed
     path('dashboard/admin/', views.ProjectManagerDashboard.as_view(), name='project-manager-dashboard'),  # Changed
@@ -31,10 +32,7 @@ urlpatterns = [
          views.approve_time_entry, 
          name='approve-time-entry'),
 
-    path('logout/', LogoutView.as_view(
-        next_page='login',
-        template_name='time_tracking/login.html'
-    ), name='logout'),
+    
     path('privacy/', views.privacy_policy, name='privacy'),
     path('imprint/', views.imprint, name='imprint'),
 ]

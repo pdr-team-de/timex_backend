@@ -1,17 +1,22 @@
-from django.shortcuts import render , redirect
+import logging
+
+from django.contrib import messages
+
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.mixins import UserPassesTestMixin, LoginRequiredMixin
+from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth import logout
 from .models import TimeEntry, CustomUser, Station, Zeitarbeitsfirma, Notification
 from .forms import ProjectManagerCreationForm, TempWorkerCreationForm, TempFirmCreationForm
-from django.contrib import messages
-import logging
-from django.urls import reverse
+from django.shortcuts import render , redirect
+
+from django.urls import reverse, reverse_lazy
 
 from django.http import JsonResponse
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from .forms import generate_password
-from django.contrib.auth.mixins import UserPassesTestMixin, LoginRequiredMixin
-from django.contrib.auth.views import LoginView
+
 from django.views.generic import ListView
 from django.db.models import Sum, F
 from datetime import timedelta
@@ -29,151 +34,6 @@ from rest_framework.parsers import JSONParser
 import json
 logger = logging.getLogger(__name__)
 
-
-
-# Create your views here.
-def is_admin(user):
-    return user.user_type == 'ADMIN'
-
-def is_project_manager(user):
-    return user.user_type == 'PROJECT_MANAGER'
-
-@csrf_exempt
-def generate_password_view(request):
-    """Generate a new password and return it as JSON"""
-    password = generate_password()
-    print(f"Generated password: {password}")  # Debug output
-    return JsonResponse({'password': password})
-
-@user_passes_test(lambda u: u.user_type == 'ADMIN')
-def create_temp_worker(request):
-    if request.method == 'POST':
-        form = TempWorkerCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()  # The form now handles everything
-            messages.success(request, 
-                f'Zeitarbeitskraft-Account wurde erfolgreich erstellt.\nZugangsdaten wurden per E-Mail an {user.email} gesendet.')
-            return redirect('admin-dashboard')
-    else:
-        form = TempWorkerCreationForm()
-        initial_password = generate_password()
-    
-    return render(request, 'time_tracking/admin/temp-worker/create_temp_worker.html', {
-        'form': form,
-        'initial_password': initial_password
-    })
-
-@user_passes_test(lambda u: u.user_type == 'ADMIN')
-def create_project_manager(request):
-    if request.method == 'POST':
-        form = ProjectManagerCreationForm(request.POST)
-        if form.is_valid():
-            user, password = form.save()
-            messages.success(request, 
-                f'Project Manager account created successfully.\nUsername: {user.username}\nPassword: {password}')
-            return redirect('admin-dashboard')
-    else:
-        form = ProjectManagerCreationForm()
-    return render(request, 'time_tracking/admin/project-manager/create_project_manager.html', {'form': form})
-
-@user_passes_test(lambda u: u.user_type == 'ADMIN')
-def create_temp_firm(request):
-    if request.method == 'POST':
-        form = TempFirmCreationForm(request.POST)
-        if form.is_valid():
-            temp_firm = form.save()
-            messages.success(request, f'Temporary firm {temp_firm.name} created successfully.')
-            return redirect('admin-dashboard')
-    else:
-        form = TempFirmCreationForm()
-    return render(request, 'time_tracking/admin/temp-firm/create_temp_firm.html', {'form': form})
-
-@login_required
-def time_tracking_view(request):
-    if request.user.user_type != 'TEMP_WORKER':
-        return redirect('admin-dashboard')
-    return render(request, 'time_tracking/tracking.html')
-
-class ProjectManagerDashboard(UserPassesTestMixin, ListView):
-    model = TimeEntry
-    template_name = 'time_tracking/admin/project_manager_dashboard.html'
-    context_object_name = 'time_entries'
-    paginate_by = 10
-    ordering = ['-timestamp']
-
-    def test_func(self):
-        return is_project_manager(self.request.user)
-
-    def get_queryset(self):
-        return TimeEntry.objects.filter(
-            user__project_manager=self.request.user
-        ).select_related('user')
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Mitarbeiter des Projektleiters
-        context['workers'] = CustomUser.objects.filter(
-            project_manager=self.request.user,
-            user_type='TEMP_WORKER'
-        )
-        context['active_workers_count'] = context['workers'].filter(is_active=True).count()
-        
-        # Change status to approval_status
-        context['pending_entries'] = TimeEntry.objects.filter(
-            user__project_manager=self.request.user,
-            approval_status='PENDING'  # Changed from status to approval_status
-        ).select_related('user').order_by('-timestamp')
-        
-        context['notifications'] = Notification.objects.filter(
-            user=self.request.user,
-            read=False
-        ).order_by('-created_at')
-        return context
-    
-@api_view(['POST'])
-def toggle_worker_status(request, worker_id):
-    try:
-        worker = CustomUser.objects.get(
-            id=worker_id, 
-            project_manager=request.user,
-            user_type='TEMP_WORKER'
-        )
-        worker.is_active = not worker.is_active
-        worker.save()
-        return Response({'status': 'success', 'is_active': worker.is_active})
-    except CustomUser.DoesNotExist:
-        return Response({'status': 'error'}, status=404)
-    
-@api_view(['POST'])
-def approve_time_entry(request, entry_id):
-    try:
-        entry = TimeEntry.objects.get(
-            id=entry_id,
-            user__project_manager=request.user
-        )
-        
-        # Only allow manager notes for Feierabend entries
-        if entry.entry_type == 'FEIERABEND':
-            entry.manager_note = request.data.get('manager_note', '')
-        
-        entry.approval_status = 'APPROVED'
-        entry.approved_at = timezone.now()
-        entry.approved_by = request.user
-        entry.save()
-        
-        # Create notification for admin
-        Notification.objects.create(
-            user=CustomUser.objects.filter(user_type='ADMIN').first(),
-            title='Neue bestätigte Zeiterfassung',
-            message=f'Zeiterfassung von {entry.user.get_full_name()} wurde bestätigt',
-            entry=entry
-        )
-        
-        return Response({'status': 'success'})
-    except TimeEntry.DoesNotExist:
-        return Response({'status': 'error', 'message': 'Zeiteintrag nicht gefunden'}, status=404)
-    except Exception as e:
-        return Response({'status': 'error', 'message': str(e)}, status=400)
 
 class AdminDashboard(LoginRequiredMixin, UserPassesTestMixin, ListView):
     model = TimeEntry
@@ -288,6 +148,192 @@ class CustomLoginView(LoginView):
         except Exception as e:
             logger.error(f"Error in get_success_url for user {user}: {str(e)}")
             return reverse('login')
+        
+class CustomLogoutView(LogoutView):
+    next_page = reverse_lazy('login')
+    
+    def dispatch(self, request, *args, **kwargs):
+        # Clear all session data
+        request.session.flush()
+        # Perform logout
+        logout(request)
+        # Redirect to login page
+        return super().dispatch(request, *args, **kwargs)
+
+
+# Create your views here.
+def is_admin(user):
+    return user.user_type == 'ADMIN'
+
+def is_project_manager(user):
+    return user.user_type == 'PROJECT_MANAGER'
+
+@api_view(['GET'])
+def generate_password_view(request):
+    """Generate a new password and return it as JSON"""
+    password = generate_password()
+    request.session['temp_password'] = password  # Store in session
+    return JsonResponse({
+        'status': 'success',
+        'password': password
+    })
+
+class ProjectManagerDashboard(UserPassesTestMixin, ListView):
+    model = TimeEntry
+    template_name = 'time_tracking/admin/project_manager_dashboard.html'
+    context_object_name = 'time_entries'
+    paginate_by = 10
+    ordering = ['-timestamp']
+
+    def test_func(self):
+        return is_project_manager(self.request.user)
+
+    def get_queryset(self):
+        return TimeEntry.objects.filter(
+            user__project_manager=self.request.user
+        ).select_related('user')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Mitarbeiter des Projektleiters
+        context['workers'] = CustomUser.objects.filter(
+            project_manager=self.request.user,
+            user_type='TEMP_WORKER'
+        )
+        context['active_workers_count'] = context['workers'].filter(is_active=True).count()
+        
+        # Change status to approval_status
+        context['pending_entries'] = TimeEntry.objects.filter(
+            user__project_manager=self.request.user,
+            approval_status='PENDING'  # Changed from status to approval_status
+        ).select_related('user').order_by('-timestamp')
+        
+        context['notifications'] = Notification.objects.filter(
+            user=self.request.user,
+            read=False
+        ).order_by('-created_at')
+        return context
+
+@user_passes_test(lambda u: u.user_type == 'ADMIN')
+def create_temp_worker(request):
+    #Clear any existing messages at the strt
+    storage = messages.get_messages(request)
+    storage.used = True
+
+    if request.method == 'POST':
+        form = TempWorkerCreationForm(request.POST)
+        if form.is_valid():
+            password = request.session.get('temp_password')
+            if not password:
+                messages.error(request, 'Password generation error. Please try again.')
+                return redirect('create-temp-worker')
+            
+            user = form.save(commit=False)
+            user.set_password(password)
+            user.save()
+            
+            # Send welcome email with credentials
+            try:
+                form.send_credentials_email(user, password)
+                messages.success(request, 
+                    f'Zeitarbeitskraft-Account wurde erfolgreich erstellt.\nZugangsdaten wurden per E-Mail an {user.email} gesendet.')
+            except Exception as e:
+                messages.warning(request, 
+                    f'Account erstellt, aber E-Mail konnte nicht gesendet werden: {str(e)}')
+            
+            # Clear the temporary password
+            if 'temp_password' in request.session:
+                del request.session['temp_password']
+                
+            return redirect('admin-dashboard')
+    else:
+        form = TempWorkerCreationForm()
+        initial_password = generate_password()
+        request.session['temp_password'] = initial_password
+    
+    return render(request, 'time_tracking/admin/temp-worker/create_temp_worker.html', {
+        'form': form,
+        'initial_password': initial_password
+    })
+
+@user_passes_test(lambda u: u.user_type == 'ADMIN')
+def create_project_manager(request):
+    if request.method == 'POST':
+        form = ProjectManagerCreationForm(request.POST)
+        if form.is_valid():
+            user, password = form.save()
+            messages.success(request, 
+                f'Project Manager account created successfully.\nUsername: {user.username}\nPassword: {password}')
+            return redirect('admin-dashboard')
+    else:
+        form = ProjectManagerCreationForm()
+    return render(request, 'time_tracking/admin/project-manager/create_project_manager.html', {'form': form})
+
+@user_passes_test(lambda u: u.user_type == 'ADMIN')
+def create_temp_firm(request):
+    if request.method == 'POST':
+        form = TempFirmCreationForm(request.POST)
+        if form.is_valid():
+            temp_firm = form.save()
+            messages.success(request, f'Temporary firm {temp_firm.name} created successfully.')
+            return redirect('admin-dashboard')
+    else:
+        form = TempFirmCreationForm()
+    return render(request, 'time_tracking/admin/temp-firm/create_temp_firm.html', {'form': form})
+
+@login_required
+def time_tracking_view(request):
+    if request.user.user_type != 'TEMP_WORKER':
+        return redirect('admin-dashboard')
+    return render(request, 'time_tracking/tracking.html')
+
+
+    
+@api_view(['POST'])
+def toggle_worker_status(request, worker_id):
+    try:
+        worker = CustomUser.objects.get(
+            id=worker_id, 
+            project_manager=request.user,
+            user_type='TEMP_WORKER'
+        )
+        worker.is_active = not worker.is_active
+        worker.save()
+        return Response({'status': 'success', 'is_active': worker.is_active})
+    except CustomUser.DoesNotExist:
+        return Response({'status': 'error'}, status=404)
+    
+@api_view(['POST'])
+def approve_time_entry(request, entry_id):
+    try:
+        entry = TimeEntry.objects.get(
+            id=entry_id,
+            user__project_manager=request.user
+        )
+        
+        # Only allow manager notes for Feierabend entries
+        if entry.entry_type == 'FEIERABEND':
+            entry.manager_note = request.data.get('manager_note', '')
+        
+        entry.approval_status = 'APPROVED'
+        entry.approved_at = timezone.now()
+        entry.approved_by = request.user
+        entry.save()
+        
+        # Create notification for admin
+        Notification.objects.create(
+            user=CustomUser.objects.filter(user_type='ADMIN').first(),
+            title='Neue bestätigte Zeiterfassung',
+            message=f'Zeiterfassung von {entry.user.get_full_name()} wurde bestätigt',
+            entry=entry
+        )
+        
+        return Response({'status': 'success'})
+    except TimeEntry.DoesNotExist:
+        return Response({'status': 'error', 'message': 'Zeiteintrag nicht gefunden'}, status=404)
+    except Exception as e:
+        return Response({'status': 'error', 'message': str(e)}, status=400)
+
 
 def redirect_to_appropriate_page(request):
     if request.user.is_authenticated:

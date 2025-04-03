@@ -6,3 +6,41 @@ Not Found: /favicon.ico
 Not Found: /favicon.ico
 Successful login for user: max.mustermann (type: TEMP_WORKER)
 Successful login for user: lisa.wagner (type: TEMP_WORKER)
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /api/worker/4/toggle-status/
+Not Found: /tracking/datenschutz.html
+Not Found: /api/worker/4/toggle-status/
+Not Found: /api/worker/9/toggle-status/
+Not Found: /api/worker/9/toggle-status/
+Method Not Allowed (GET): /logout/
+Method Not Allowed: /logout/
+Method Not Allowed (GET): /logout/
+Method Not Allowed: /logout/
+Method Not Allowed (GET): /logout/
+Method Not Allowed: /logout/
+Method Not Allowed (GET): /logout/
+Method Not Allowed: /logout/
+Method Not Allowed (GET): /logout/
+Method Not Allowed: /logout/
+Internal Server Error: /dashboard/admin/temp-worker/
+Traceback (most recent call last):
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/django/contrib/auth/decorators.py", line 57, in _view_wrapper
+    test_pass = test_func(request.user)
+                ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/iosifgogolos/timex_backend/time_tracking/views.py", line 217, in <lambda>
+    @user_passes_test(lambda u: u.user_type == 'ADMIN')
+                                ^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/django/utils/functional.py", line 253, in inner
+    return func(_wrapped, *args)
+           ^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'AnonymousUser' object has no attribute 'user_type'
+Successful login for user: katharina.weiland (type: ADMIN)
+Successful login for user: katharina.weiland (type: ADMIN)
