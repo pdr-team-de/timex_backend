@@ -93,6 +93,13 @@ class TimeEntry(models.Model):
     class Meta:
         ordering = ['-timestamp']
 
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if self.manager_note and self.entry_type != 'FEIERABEND':
+            raise ValidationError({
+                'manager_note': 'Manager notes can only be added to Feierabend entries.'
+            })
+
 class Notification(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)

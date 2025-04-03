@@ -60,88 +60,13 @@ document.addEventListener('DOMContentLoaded', function(){
         }
     }
 
-    // Event Listeners
-    document.getElementById('KommenAktiv').addEventListener('click', function(){
-        const now = new Date();
-        const entry = {
-            type: 'kommen',
-            time: now,
-            containerId: `time-tracking-${++containerCount}`
-        };
-        timeEntries.push(entry);
-
-        if (!lastAction) {
-            document.getElementById('info-container').style.display = 'none';
-        } else if (lastAction === 'gehen') {
-            const lastGehen = timeEntries.find(e => e.type === 'gehen');
-            if (lastGehen) {
-                const breakTime = Math.round((now - lastGehen.time) / (1000 * 60));
-                totalBreakTime += breakTime;
-                updateInfoContainer();
-            }
-        }
-        
-        createTimeTrackingContainer(entry);
-        lastAction = 'kommen';
-        updateButtonStates('kommen');
-    });
-
-    document.getElementById('GehenAktiv').addEventListener('click', function(){
-        const now = new Date();
-        const entry = {
-            type: 'gehen',
-            time: now,
-            containerId: `time-tracking-${++containerCount}`
-        };
-        timeEntries.push(entry);
-
-        const lastKommen = timeEntries.filter(e => e.type === 'kommen').pop();
-        if (lastKommen) {
-            const workTime = Math.round((now - lastKommen.time) / (1000 * 60));
-            totalWorkTime += workTime;
-            updateInfoContainer();
-        }
-
-        createTimeTrackingContainer(entry);
-        lastAction = 'gehen';
-        updateButtonStates('gehen');
-    });
-
-    document.getElementById('FeierabendAktiv').addEventListener('click', function(){
-        const note = prompt('Sie sind dabei ihren Arbeitstag zu beenden. Dieser Schritt kann nicht rückgängig gemacht werden. \nOptional: Möchten Sie eine Notiz an den Projektleiter senden?');
-        if (note !== null) {
-            const now = new Date();
-            const entry = {
-                type: 'feierabend',
-                time: now,
-                containerId: `time-tracking-${++containerCount}`,
-                note: note
-            };
-            timeEntries.push(entry);
-
-            if (lastAction === 'kommen') {
-                const lastKommen = timeEntries.filter(e => e.type === 'kommen').pop();
-                if (lastKommen) {
-                    const workTime = Math.round((now - lastKommen.time) / (1000 * 60));
-                    totalWorkTime += workTime;
-                    updateInfoContainer();
-                }
-            }
-
-            createTimeTrackingContainer(entry);
-            lastAction = 'feierabend';
-            updateButtonStates('feierabend');
-            
-            // Send data to server
-            sendTimeEntries(timeEntries, note);
-        }
-    });
-
+    // Erzeugt das UI-Element für einen Zeiteintrag
     function createTimeTrackingContainer(entry) {
         const container = document.createElement('div');
         container.id = entry.containerId;
         container.className = 'time-tracking-container';
         
+        // Formatierung der Zeit und des Datums (hier immer als lokaler String)
         const timeString = entry.time.toLocaleTimeString('de-DE', {
             hour: '2-digit',
             minute: '2-digit'
@@ -152,6 +77,7 @@ document.addEventListener('DOMContentLoaded', function(){
             year: 'numeric'
         });
         
+        // Icon entsprechend dem Entry-Typ auswählen
         const iconName = BUTTON_STATES[entry.type.toUpperCase()].transparent;
         
         container.innerHTML = `
@@ -168,11 +94,12 @@ document.addEventListener('DOMContentLoaded', function(){
         infoContainer.parentNode.insertBefore(container, infoContainer.nextSibling);
     }
 
+    // Aktualisiert den Info-Bereich mit Arbeits- und Pausenzeiten
     function updateInfoContainer() {
         const infoContainer = document.getElementById('info-container');
         infoContainer.style.display = 'flex';
-        infoContainer.style.flexDirection = 'column'; // Add this line
-        infoContainer.style.alignItems = 'center'; // Add this line
+        infoContainer.style.flexDirection = 'column';
+        infoContainer.style.alignItems = 'center';
         infoContainer.innerHTML = '';
 
         const workHours = Math.floor(totalWorkTime / 60);
@@ -181,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function(){
         
         const workTimeInfo = document.createElement('p');
         workTimeInfo.textContent = `${formattedWork} h Arbeitszeit gebucht`;
-        workTimeInfo.style.margin = '0.5rem 0'; // Add spacing
+        workTimeInfo.style.margin = '0.5rem 0';
         infoContainer.appendChild(workTimeInfo);
 
         if (totalBreakTime > 0) {
@@ -191,11 +118,12 @@ document.addEventListener('DOMContentLoaded', function(){
             
             const breakInfo = document.createElement('p');
             breakInfo.textContent = `${formattedBreak} h Pause gebucht`;
-            breakInfo.style.margin = '0.5rem 0'; // Add spacing
+            breakInfo.style.margin = '0.5rem 0';
             infoContainer.appendChild(breakInfo);
         }
     }
 
+    // Hilfsfunktion zum Auslesen des CSRF-Cookies
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -211,56 +139,69 @@ document.addEventListener('DOMContentLoaded', function(){
         return cookieValue;
     }
 
+    // Sendet den Zeiteintrag asynchron an den Server
     async function createTimeEntry(type, note = null) {
         try {
+            const csrftoken = getCookie('csrftoken');
             const response = await fetch('/api/time-entries/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken'),
+                    'X-CSRFToken': csrftoken,
                     'Accept': 'application/json'
                 },
-                credentials: 'same-origin',
                 body: JSON.stringify({
-                    entry_type: type,
+                    type: type,
                     note: note
                 })
             });
     
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-            }
-    
             const data = await response.json();
             
+            if (!response.ok) {
+                throw new Error(data.message || 'Server Error');
+            }
+    
             if (data.status === 'success') {
-                // Update UI
-                const entryData = {
+                const now = new Date();
+                const entry = {
                     type: type.toLowerCase(),
-                    time: new Date(data.data.time),
+                    time: now,
+                    containerId: `time-tracking-${++containerCount}`,
                     note: note
                 };
                 
-                createTimeTrackingContainer(entryData);
+                timeEntries.push(entry);
+                createTimeTrackingContainer(entry);
                 updateButtonStates(type.toLowerCase());
-                
-                if (type === 'FEIERABEND') {
-                    updateInfoContainer();
-                }
+                updateTimeCalculations(entry);
+                lastAction = type.toLowerCase();
+    
+                return data;
             } else {
                 throw new Error(data.message || 'Unbekannter Fehler');
             }
-    
         } catch (error) {
             console.error('Error:', error);
             alert(`Fehler beim Speichern des Zeiteintrags: ${error.message}`);
+            throw error;
+        } finally {
+            // Re-enable button if needed
+            const button = document.querySelector(`button[data-type="${type}"]`);
+            if (button) {
+                button.disabled = false;
+            }
         }
     }
 
-    document.getElementById('KommenAktiv').addEventListener('click', function(){
-        this.disabled = true;
-        createTimeEntry('KOMMEN');
+    // Event Listener – hier jeweils nur ein Listener pro Button
+    document.getElementById('KommenAktiv').addEventListener('click', async function() {
+        try {
+            this.disabled = true;
+            await createTimeEntry('KOMMEN');
+        } catch (error) {
+            this.disabled = false;
+        }
     });
 
     document.getElementById('GehenAktiv').addEventListener('click', function(){
@@ -272,5 +213,4 @@ document.addEventListener('DOMContentLoaded', function(){
         const note = prompt('Möchten Sie eine Notiz für den Projektleiter hinterlassen?');
         createTimeEntry('FEIERABEND', note);
     });
-
 });

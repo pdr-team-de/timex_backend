@@ -30,10 +30,11 @@ urlpatterns = [
     path('api/time-entry/<int:entry_id>/approve/', 
          views.approve_time_entry, 
          name='approve-time-entry'),
-    path('privacy/', views.privacy_policy, name='privacy'),
-    path('imprint/', views.imprint, name='imprint'),
+
     path('logout/', LogoutView.as_view(
         next_page='login',
         template_name='time_tracking/login.html'
     ), name='logout'),
+    path('privacy/', views.privacy_policy, name='privacy'),
+    path('imprint/', views.imprint, name='imprint'),
 ]

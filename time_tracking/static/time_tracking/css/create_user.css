@@ -194,62 +194,35 @@ body {
 
 /* Overlay für das Menü */
 .menu-overlay {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(5px);
-  z-index: 1000;
-  justify-content: center;
-  align-items: center;
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
 }
 
 /* Inhalt des Menüs*/
-.menu-content {
-position: relative;
-background-color: rgba(255, 255, 255, 0.1);
-padding: 2em;
-border-radius: 10px;
-text-align: center;
+.menu-content{
+    text-align: center;
+    padding: 2em;
 }
 
-.menu-content a {
-display: block;
-margin: 1em 0;
-color: whitesmoke;
-text-decoration: none;
-font-size: 1.2em;
-padding: 0.5em 1em;
-transition: all 0.3s ease;
+.menu-content a{
+    display: block;
+    margin: 1em 0;
+    color: whitesmoke;
+    text-decoration: none;
+    font-size: 1.2em;
 }
 
 .menu-content a:hover {
-background-color: rgba(255, 255, 255, 0.1);
-border-radius: 5px;
-}
-
-.menu-content .btn-primary {
-background-color: #0d6efd;
-border-color: #0d6efd;
-margin-top: 1em;
-}
-
-#close-menu {
-position: absolute;
-top: 10px;
-right: 10px;
-background: none;
-border: none;
-color: white;
-font-size: 1.5em;
-cursor: pointer;
-}
-
-#close-menu:hover {
-color: #dc3545;
+    text-decoration: underline;
 }
 
 .time-button-container{
