@@ -588,3 +588,45 @@ def imprint(request):
 
 def privacy_policy(request):
     return render(request, 'time_tracking/legal/privacy_policy.html')
+
+
+@user_passes_test(lambda u: u.user_type == 'ADMIN')
+def stations_overview(request):
+    stations = Station.objects.all().order_by('name')
+    return render(request, 'time_tracking/admin/station/stations_overview.html', {
+        'stations': stations
+    })
+
+@api_view(['PUT'])
+@user_passes_test(lambda u: u.user_type == 'ADMIN')
+def edit_station(request, station_id):
+    try:
+        station = Station.objects.get(id=station_id)
+        data = json.loads(request.body)
+        
+        station.name = data.get('name', station.name)
+        station.location = data.get('location', station.location)
+        station.save()
+        
+        return JsonResponse({'status': 'success'})
+    except Station.DoesNotExist:
+        return JsonResponse({'error': 'Station not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+@api_view(['DELETE'])
+@user_passes_test(lambda u: u.user_type == 'ADMIN')
+def delete_station(request, station_id):
+    try:
+        station = Station.objects.get(id=station_id)
+        if station.customuser_set.exists():
+            return JsonResponse({
+                'error': 'Cannot delete station with assigned users'
+            }, status=400)
+        
+        station.delete()
+        return JsonResponse({'status': 'success'})
+    except Station.DoesNotExist:
+        return JsonResponse({'error': 'Station not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)

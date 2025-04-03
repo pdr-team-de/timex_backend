@@ -17,6 +17,9 @@ urlpatterns = [
     path('dashboard/admin/temp-worker/', views.create_temp_worker, name='create-temp-worker'),  
     path('dashboard/admin/temp-firm/', views.create_temp_firm, name='create-temp-firm'),  
     path('dashboard/admin/station/', views.create_station, name='create-station'),  
+    path('dashboard/admin/stations/', views.stations_overview, name='stations-overview'),
+    path('api/station/<int:station_id>/edit/', views.edit_station, name='edit-station'),
+    path('api/station/<int:station_id>/delete/', views.delete_station, name='delete-station'),
 
     path('project-manager/dashboard/', 
          views.ProjectManagerDashboard.as_view(),
