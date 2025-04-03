@@ -169,36 +169,6 @@ def is_admin(user):
 def is_project_manager(user):
     return user.user_type == 'PROJECT_MANAGER'
 
-@require_http_methods(["GET"])
-def generate_password_api(request):
-    """API endpoint to generate a new password"""
-    try:
-        new_password = generate_password()
-        return JsonResponse({
-            'status': 'success',
-            'password': new_password
-        })
-    except Exception as e:
-        return JsonResponse({
-            'status': 'error',
-            'message': str(e)
-        }, status=400)
-
-@require_http_methods(["GET"])
-def generate_password_view(request):
-    """Generate a new password and return it as JSON"""
-    try:
-        password = generate_password()
-        return JsonResponse({
-            'status': 'success',
-            'password': password
-        })
-    except Exception as e:
-        return JsonResponse({
-            'status': 'error',
-            'message': str(e)
-        }, status=400)
-
 class ProjectManagerDashboard(UserPassesTestMixin, ListView):
     model = TimeEntry
     template_name = 'time_tracking/admin/project_manager_dashboard.html'
