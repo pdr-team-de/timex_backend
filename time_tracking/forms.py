@@ -21,6 +21,8 @@ class BaseUserCreationForm(forms.ModelForm):
             
             Benutzername: {user.username}
             Passwort: {password}
+
+            Bitte loggen Sie sich unter folgender URL ein: https://timex-backend.onrender.com/login/
             
             Mit freundlichen Grüßen
             Ihr PDR-Team
@@ -64,7 +66,7 @@ class AdminCreationForm(BaseUserCreationForm):
         base_username = f"{self.cleaned_data['first_name'].lower()}.{self.cleaned_data['last_name'].lower()}"
         user.username = generate_unique_username(base_username, CustomUser)
         
-       # Wichtig: Verwenden Sie das generierte Passwort direkt
+        # Use generated password
         password = self.cleaned_data.get('generated_password')
         if not password:
             password = generate_password()
@@ -75,7 +77,7 @@ class AdminCreationForm(BaseUserCreationForm):
             user.save()
             self.send_credentials_email(user, password)
         
-        return user, password
+        return user  # Return only the user object
 
 class TempWorkerCreationForm(BaseUserCreationForm):
     station = forms.ModelChoiceField(
