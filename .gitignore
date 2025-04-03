@@ -1,1 +1,7 @@
-.qodo
+*.pyc
+__pycache__/
+db.sqlite3
+.env
+.venv
+staticfiles/
+debug.log

@@ -15,10 +15,6 @@ services:
         value: 3.12.0
       - key: RENDER
         value: true
-      - key: EMAIL_HOST_USER
-        sync: false
-      - key: EMAIL_HOST_PASSWORD
-        sync: false
     dependencies:
       - name: timex_db
 
@@ -26,4 +22,4 @@ databases:
   - name: timex_db
     plan: free
     databaseName: timex_production
-    ipAllowList: []  # Allows all IPs
+    ipAllowList: []
