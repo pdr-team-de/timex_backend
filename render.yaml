@@ -19,9 +19,11 @@ services:
         sync: false
       - key: EMAIL_HOST_PASSWORD
         sync: false
+    dependencies:
+      - name: timex_db
 
 databases:
   - name: timex_db
     plan: free
-    databaseName: timex_db
-    ipAllowList: []
+    databaseName: timex_production
+    ipAllowList: []  # Allows all IPs
