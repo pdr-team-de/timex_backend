@@ -9,12 +9,6 @@ services:
         fromDatabase:
           name: timex_db
           property: connectionString
-      - key: SECRET_KEY
-        generateValue: true
-      - key: PYTHON_VERSION
-        value: 3.12.0
-      - key: RENDER
-        value: true
     dependencies:
       - name: timex_db
 
