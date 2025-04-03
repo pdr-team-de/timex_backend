@@ -19,8 +19,6 @@ urlpatterns = [
     path('project-manager/dashboard/', 
          views.ProjectManagerDashboard.as_view(),
          name='project_manager_dashboard'),
-    path('generate-password/', views.generate_password_view, name='generate-password'),
-    path('api/generate-password/', views.generate_password_api, name='generate-password-api'),
 
     path('api/user-time-entries/<int:user_id>/', views.get_user_time_entries, name='user-time-entries'),
     path('api/user/<int:user_id>/edit/', views.edit_user, name='edit-user'),
