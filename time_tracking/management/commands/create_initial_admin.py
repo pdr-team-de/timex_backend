@@ -15,16 +15,16 @@ class Command(BaseCommand):
             return
 
         try:
-            if not CustomUser.objects.filter(username="iosif.timex").exists():
+            if not CustomUser.objects.filter(username="admin.timex").exists():
                 admin = CustomUser.objects.create(
-                    username="iosif.timex",
+                    username="admin.timex",
                     password=make_password(admin_password),
-                    first_name="Iosif",
+                    first_name="Admin",
                     last_name="Timex",
                     email="iosif.gogolos@pdr-team.de",
                     user_type="ADMIN",
-                    is_staff=False,
-                    is_superuser=False
+                    is_staff=True,
+                    is_superuser=True
                 )
                 self.stdout.write(
                     self.style.SUCCESS(f'Successfully created admin user: {admin.username}')
