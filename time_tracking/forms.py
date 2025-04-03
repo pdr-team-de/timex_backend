@@ -77,8 +77,8 @@ class AdminCreationForm(BaseUserCreationForm):
             user.save()
             self.send_credentials_email(user, password)
         
-        return user  # Return only the user object
-
+        return {'user': user, 'password': password}  # Return a dictionary instead of a tuple
+    
 class TempWorkerCreationForm(BaseUserCreationForm):
     station = forms.ModelChoiceField(
         queryset=Station.objects.all(),
@@ -152,7 +152,7 @@ class ProjectManagerCreationForm(BaseUserCreationForm):
             user.save()
             self.send_credentials_email(user, password)
             
-        return user, password
+        return user 
 
 class TempFirmCreationForm(forms.ModelForm):
     class Meta:

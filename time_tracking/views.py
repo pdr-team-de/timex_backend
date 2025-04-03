@@ -213,8 +213,7 @@ def create_admin(request):
     if request.method == 'POST':
         form = AdminCreationForm(request.POST)
         if form.is_valid():
-            # Unpack the tuple returned by form.save()
-            user, password = form.save()
+            user = form.save()  # Get only the user object
             messages.success(request, 
                 f'Admin-Account wurde erfolgreich erstellt.\nZugangsdaten wurden per E-Mail an {user.email} gesendet.')
             return redirect('admin-dashboard')
@@ -229,7 +228,7 @@ def create_admin(request):
 
 @user_passes_test(lambda u: u.user_type == 'ADMIN')
 def create_temp_worker(request):
-    #Clear any existing messages at the strt
+    #Clear any existing messages at the start
     storage = messages.get_messages(request)
     storage.used = True
 
@@ -274,9 +273,9 @@ def create_project_manager(request):
     if request.method == 'POST':
         form = ProjectManagerCreationForm(request.POST)
         if form.is_valid():
-            user, password = form.save()
+            user = form.save()  # Get only the user object
             messages.success(request, 
-                f'Project Manager account created successfully.\nUsername: {user.username}\nPassword: {password}')
+                f'Projektleiter-Account wurde erfolgreich erstellt.\nZugangsdaten wurden per E-Mail an {user.email} gesendet.')
             return redirect('admin-dashboard')
     else:
         form = ProjectManagerCreationForm()
@@ -293,6 +292,10 @@ def create_temp_firm(request):
     else:
         form = TempFirmCreationForm()
     return render(request, 'time_tracking/admin/temp-firm/create_temp_firm.html', {'form': form})
+
+@user_passes_test(lambda u: u.user_type == 'ADMIN')
+def create_station(request):
+    pass
 
 @login_required
 def time_tracking_view(request):
