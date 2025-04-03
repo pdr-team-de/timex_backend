@@ -14,7 +14,11 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: ADMIN_PASSWORD
-        sync: false  # This means the value needs to be set manually in Render dashboard
+        sync: false
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
     dependencies:
       - name: timex_db
 

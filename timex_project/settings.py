@@ -260,8 +260,9 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = 'PDR Zeiterfassung <no-reply@pdr-team.de>'
 
+# Admin passwort settings
+
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD')
 
 # SSL Certificate path for Mac
-import os
-import certifi
 os.environ['SSL_CERT_FILE'] = certifi.where()
