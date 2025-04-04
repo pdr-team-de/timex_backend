@@ -262,7 +262,15 @@
                                     <tbody>
                                         {% for worker in workers %}
                                         <tr class="worker-row" data-worker-id="{{ worker.id }}">
-                                            <td>{{ worker.get_full_name }}</td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <span class="status-indicator me-2"
+                                                         id="status-{{ worker.id}}"
+                                                         data-bs-toggle="tooltip"
+                                                         title="Offline">⚪</span>
+                                                    {{worker.get_full_name}}
+                                                </div>
+                                            </td>
                                             <td>{{ worker.station.name }}</td>
                                             <td>{{ worker.zeitarbeitsfirma.name }}</td>
                                             <td>
@@ -278,14 +286,34 @@
                                             </td>
                                             <td>{{ worker.last_login|default:"-" }}</td>
                                             <td>
-                                                <button class="btn btn-sm btn-primary view-times" 
-                                                        data-worker-id="{{ worker.id }}">
+                                                <button class="btn btn-sm btn-primary view-log" 
+                                                        data-worker-id="{{ worker.id }}"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#activityLogModal">
                                                     <i class="fas fa-clock"></i>
                                                 </button>
                                             </td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>
+                                    <!-- Add Activity Log Modal-->
+                                     <div class="modal fade" id="activityLogModal">
+                                        <div class="modal-dialog modal-lg">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Aktivitätsprotokoll</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <!-- this will be filled dynamically-->
+                                                </div>
+                                            </div>
+
+                                        </div>
+
+
+                                     </div>
+
                                 </table>
                             </div>
                         </div>
@@ -318,12 +346,156 @@
     </div>
 </div>
 {% endblock %}
+{% block extra_css %}
+<style>
+.project-manager-header {
+    background-color: rgb(225, 225, 225);
+    height: 5em;
+    text-align: center;
+    padding-top: 2em;
+    position: relative;
+}
 
+.dashboard-title {
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: rgb(118, 118, 118);
+    font-weight: 100;
+    font-size: x-large;
+    margin: 0;
+}
+
+.menu-button {
+    position: absolute;
+    top: 0.75em;
+    left: 1em;
+    background: none;
+    border: none;
+    font-size: 2em;
+    cursor: pointer;
+}
+
+.menu-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.menu-content {
+    text-align: center;
+    padding: 2em;
+    background: rgba(220, 220, 220, 0.95);
+    border-radius: 8px;
+    min-width: 300px;
+}
+
+.menu-logo {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 1em;
+}
+
+.menu-items {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+}
+
+.menu-items a {
+    color: #333;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.menu-items a:hover {
+    color: #007bff;
+}
+
+.version-info,
+.copyright {
+    font-size: smaller;
+    color: #666;
+    margin: 0;
+}
+
+.close-button {
+    display: block;
+    margin-left: auto;
+}
+
+.dashboard-main {
+    padding: 2em;
+}
+
+/* Status indicators */
+.status-indicator {
+    font-size: 1.2em;
+    cursor: help;
+}
+
+/* Activity log */
+.activity-timeline {
+    padding: 1rem;
+}
+
+.activity-item {
+    padding: 0.5rem;
+    border-left: 3px solid #e9ecef;
+    margin-left: 1rem;
+}
+
+.activity-icon {
+    font-size: 1.2em;
+    width: 2rem;
+    text-align: center;
+}
+
+.activity-time {
+    font-weight: bold;
+}
+
+.activity-note {
+    font-size: 0.9em;
+    margin-top: 0.25rem;
+}
+
+.latest-action {
+    font-size: 1.2em;
+}
+
+.latest-time {
+    font-size: 0.9em;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .dashboard-main {
+        padding: 1em;
+    }
+    
+    .menu-content {
+        margin: 1em;
+        max-width: calc(100% - 2em);
+    }
+}
+</style>
+{% endblock %}
 {% block scripts %}
 {{ block.super }}
 <script>
+
+
+
 document.addEventListener('DOMContentLoaded', function() {
     // Worker Status Toggle
+
     document.querySelectorAll('.worker-status').forEach(toggle => {
         toggle.addEventListener('change', async function() {
             const workerId = this.dataset.workerId;

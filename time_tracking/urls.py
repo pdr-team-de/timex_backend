@@ -30,9 +30,8 @@ urlpatterns = [
     path('api/user/<int:user_id>/delete/', views.delete_user, name='delete-user'),
 
     #path('api/time-entries/', views.create_time_entry, name='create-time-entry'),
-    path('api/time-entries/', 
-         views.create_time_entry, 
-         name='create-time-entry'),
+    path('api/time-entries/', views.create_time_entry, name='create-time-entry'),
+
     path('api/export-time-entries/', views.export_time_entries, name='export-time-entries'),
     path('api/worker/<int:worker_id>/toggle-status/', 
          views.toggle_worker_status, 
@@ -41,7 +40,13 @@ urlpatterns = [
          views.approve_time_entry, 
          name='approve-time-entry'),
 
-    
+    path('api/worker/<int:worker_id>/status/', 
+         views.get_worker_status, 
+         name='worker-status'),
+    path('api/worker/<int:worker_id>/activity-log/', 
+         views.get_worker_activity_log, 
+         name='worker-activity-log'),
+
     path('privacy/', views.privacy_policy, name='privacy'),
     path('imprint/', views.imprint, name='imprint'),
 ]

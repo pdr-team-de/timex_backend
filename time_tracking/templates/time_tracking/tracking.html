@@ -1,9 +1,16 @@
 {% extends "time_tracking/base/tracking_base.html" %}
 {% load static %}
 
+
 {% block title %}Zeiterfassung{% endblock %}
 
 {% block content %}
+<!-- Add debug info -->
+<div style="display: none;">
+    <p>User: {{ request.user }}</p>
+    <p>User Type: {{ request.user.user_type }}</p>
+    <p>Authenticated: {{ request.user.is_authenticated }}</p>
+</div>
 <div class="main-background">
     <div id="info-container" class="info-container">
         <p>Für heute sind noch keine Zeiten erfasst.</p>
@@ -46,6 +53,5 @@
 {% block scripts %}
 {{ block.super }}
 <script src="{% static 'time_tracking/js/tracking.js' %}"></script>
-<script src="{% static 'time_tracking/js/global.js' %}"></script>
 
 {% endblock %}

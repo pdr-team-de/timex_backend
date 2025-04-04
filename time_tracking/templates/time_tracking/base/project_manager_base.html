@@ -1,4 +1,3 @@
-.html
 {% load static %}
 
 <!DOCTYPE html>
@@ -6,86 +5,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>{% block title %}TimeX by PDR-Team{% endblock %}</title>
+    
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    </noscript>
     
     <!-- Custom CSS -->
     <link href="{% static 'time_tracking/css/project_manager_dashboard.css' %}" rel="stylesheet">
-    <link rel="shortcut icon" href="{% static 'time_tracking/icons/favicon.ico' %}"></link>
-
+    <link rel="shortcut icon" type="image/x-icon" href="{% static 'time_tracking/icons/stone_fav/favicon.ico' %}">
     {% block extra_css %}{% endblock %}
 </head>
 <body class="admin-body">
-    <header style="background-color: rgb(225, 225, 225); height: 5em; text-align: center; padding-top: 2em; position: relative;">
-        <h1 style="font-family: Verdana, Geneva, Tahoma, sans-serif ; color:rgb(118, 118, 118); font-weight: 100 ; font-size: x-large; ">Projektleiter Dashboard</h1>
-        <button id="hamburger-menu" style="position: absolute; top: 0.75em; left: 1em; background: none; border: none; font-size: 2em; cursor: pointer;">☰</button>
+    <header class="project-manager-header">
+        <h1 class="dashboard-title">Projektleiter Dashboard</h1>
+        <button id="hamburger-menu" class="menu-button" aria-label="Menu">☰</button>
     </header>
     
-    <div id="menu-overlay" class="menu-overlay">
+    <div id="menu-overlay" class="menu-overlay" role="dialog" aria-modal="true" aria-hidden="true">
         <div class="menu-content">
-            <button id="close-menu" class="btn btn-secondary" style="display: block; align-items: center;">×</button>
-            <br>
-            <img src="{% static 'time_tracking/images/timex-logo-transparent.png' %}" alt="TimeX Logo" class="img-fluid" style="width: 100px; margin-bottom: 1em;">
-            <p style="font-size: smaller;">Version: 1.0.0</p>
-            <a href="{% url 'privacy' %}">Datenschutz</a>
-            <a href="{% url 'imprint' %}">Impressum</a>
-            <form id="logout-form" action="{% url 'logout' %}" method="post" style="display: none;">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-primary">Logout</button>
-            </form>
-            <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                Logout
-            </a>
-            <br/>
-            <p style="font-size: smaller; padding-top:1em;">&copy; 2025 PDR-Team GmbH</p>
+            <button id="close-menu" class="btn btn-secondary close-button" aria-label="Close menu">×</button>
+            <img src="{% static 'time_tracking/images/timex-logo-black.png' %}" alt="TimeX Logo" class="menu-logo" width="100" height="100">
+            <div class="menu-items">
+                <p class="version-info">Version: 1.0.0</p>
+                <a href="{% url 'privacy' %}">Datenschutz</a>
+                <a href="{% url 'imprint' %}">Impressum</a>
+                <form id="logout-form" action="{% url 'logout' %}" method="post">
+                    {% csrf_token %}
+                </form>
+                <a href="#" class="logout-link">Logout</a>
+                <p class="copyright">&copy; 2025 PDR-Team GmbH</p>
+            </div>
         </div>
     </div>
 
-    <main>
+    <main class="dashboard-main">
         {% block content %}{% endblock %}
     </main>
 
     {% block scripts %}
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{% static 'time_tracking/js/global.js' %}"></script>
     <script>
+    // Utility functions
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Initialize when DOM is loaded
     document.addEventListener('DOMContentLoaded', function() {
         const hamburgerMenu = document.getElementById('hamburger-menu');
         const menuOverlay = document.getElementById('menu-overlay');
         const closeMenu = document.getElementById('close-menu');
+        const logoutLink = document.querySelector('.logout-link');
 
-        hamburgerMenu.addEventListener('click', function() {
+        hamburgerMenu?.addEventListener('click', () => {
             menuOverlay.style.display = 'flex';
+            menuOverlay.setAttribute('aria-hidden', 'false');
         });
 
-        closeMenu.addEventListener('click', function() {
+        closeMenu?.addEventListener('click', () => {
             menuOverlay.style.display = 'none';
+            menuOverlay.setAttribute('aria-hidden', 'true');
         });
 
-        // Schließen des Menüs bei Klick außerhalb
-        menuOverlay.addEventListener('click', function(e) {
+        menuOverlay?.addEventListener('click', (e) => {
             if (e.target === menuOverlay) {
                 menuOverlay.style.display = 'none';
+                menuOverlay.setAttribute('aria-hidden', 'true');
             }
         });
+
+        logoutLink?.addEventListener('click', (e) => {
+            e.preventDefault();
+            handleLogout();
+        });
+
         function handleLogout() {
             const form = document.getElementById('logout-form');
             if (form) {
-                // Clear any stored session data
                 sessionStorage.clear();
                 localStorage.clear();
-                
-                // Submit the logout form
                 form.submit();
             }
         }
     });
     </script>
+    <script src="{% static 'time_tracking/js/global.js' %}"></script>
+    <script src="{% static 'time_tracking/js/project_manager.js' %}"></script>
     {% endblock %}
 </body>
 </html>

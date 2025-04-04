@@ -33,6 +33,7 @@ from rest_framework.response import Response
 from rest_framework.parsers import JSONParser
 
 import json
+from django.middleware.csrf import get_token
 logger = logging.getLogger(__name__)
 
 
@@ -339,9 +340,27 @@ def create_station(request):
 @login_required
 def time_tracking_view(request):
     if request.user.user_type != 'TEMP_WORKER':
-        return redirect('admin-dashboard')
-    return render(request, 'time_tracking/tracking.html')
-
+        return redirect('login')  # Redirect to login if not TEMP_WORKER
+        
+    # Get today's entries
+    today = timezone.now().date()
+    time_entries = TimeEntry.objects.filter(
+        user=request.user,
+        timestamp__date=today
+    ).order_by('-timestamp')
+    
+    # Get last action
+    last_entry = time_entries.first()
+    last_action = last_entry.entry_type.lower() if last_entry else None
+    
+    # Show Feierabend button only after GEHEN
+    show_feierabend = last_action == 'gehen'
+    
+    return render(request, 'time_tracking/tracking.html', {
+        'time_entries': time_entries,
+        'last_action': last_action,
+        'show_feierabend': show_feierabend
+    })
 
     
 @api_view(['POST'])
@@ -462,62 +481,54 @@ def export_time_entries(request):
     response['Content-Disposition'] = 'attachment; filename=zeiterfassung.xlsx'
     return response
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-@parser_classes([JSONParser])
+@require_http_methods(["POST"])
+@login_required
 def create_time_entry(request):
     try:
-        # Validate user type
-        if not request.user.is_authenticated:
-            return Response({
+        if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
                 'status': 'error',
-                'message': 'Nicht authentifiziert'
-            }, status=401)
-
-        if request.user.user_type != 'TEMP_WORKER':
-            return Response({
-                'status': 'error',
-                'message': 'Nur Zeitarbeitskräfte können Zeiteinträge erstellen'
-            }, status=403)
-
-        # Validate entry type
-        entry_type = request.data.get('type', '').upper()
-        if entry_type not in dict(TimeEntry.ENTRY_TYPES).keys():
-            return Response({
-                'status': 'error',
-                'message': 'Ungültiger Eintragstyp'
+                'message': 'AJAX request required'
             }, status=400)
 
-        # Create entry
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid JSON'
+            }, status=400)
+
+        entry_type = data.get('type', '').upper()
+        if entry_type not in ['KOMMEN', 'GEHEN', 'FEIERABEND']:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid entry type'
+            }, status=400)
+
         entry = TimeEntry.objects.create(
             user=request.user,
             entry_type=entry_type,
-            note=request.data.get('note'),
+            note=data.get('note'),
             timestamp=timezone.now()
         )
 
-        # Notify project manager for FEIERABEND
         if entry_type == 'FEIERABEND' and request.user.project_manager:
-            Notification.objects.create(
-                user=request.user.project_manager,
-                type='FEIERABEND',
-                title='Arbeitstag beendet',
-                message=f'{request.user.get_full_name()} hat den Arbeitstag beendet',
-                entry=entry
-            )
+            notify_project_manager(entry)
 
-        return Response({
+        response_data = {
             'status': 'success',
             'data': {
                 'id': entry.id,
                 'timestamp': entry.timestamp.isoformat(),
-                'type': entry.entry_type,
-                'note': entry.note
+                'type': entry_type,
+                'note': entry.note or ''
             }
-        }, status=201)
+        }
+        return JsonResponse(response_data, status=201)
 
     except Exception as e:
-        return Response({
+        return JsonResponse({
             'status': 'error',
             'message': str(e)
         }, status=400)
@@ -630,3 +641,88 @@ def delete_station(request, station_id):
         return JsonResponse({'error': 'Station not found'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
+
+@api_view(['GET'])
+@login_required
+def get_worker_status(request, worker_id):
+    try:
+        worker = CustomUser.objects.get(
+            id=worker_id,
+            project_manager=request.user,
+            user_type='TEMP_WORKER'
+        )
+        
+        now = timezone.now()
+        session_key = f"user_{worker.id}_last_active"
+        last_active = request.session.get(session_key)
+        
+        # Check multiple activity indicators
+        last_activity = worker.last_login
+        recent_entry = TimeEntry.objects.filter(
+            user=worker,
+            timestamp__gte=now - timedelta(minutes=5)
+        ).exists()
+        
+        # Get last action
+        last_action = TimeEntry.objects.filter(
+            user=worker,
+            timestamp__date=now.date()
+        ).order_by('-timestamp').first()
+
+        # Consider user online if:
+        # 1. They have a recent login
+        # 2. They have made a recent entry
+        # 3. They have recent session activity
+        is_online = any([
+            last_activity and (now - last_activity) < timedelta(minutes=5),
+            recent_entry,
+            last_active and (now - timezone.datetime.fromtimestamp(last_active, tz=timezone.utc)) < timedelta(minutes=5)
+        ])
+        
+        response_data = {
+            'is_online': is_online,
+            'last_seen': last_activity.isoformat() if last_activity else None,
+            'last_action': None
+        }
+        
+        if last_action:
+            response_data['last_action'] = {
+                'type': last_action.entry_type,
+                'timestamp': last_action.timestamp.isoformat(),
+                'is_recent': (now - last_action.timestamp) < timedelta(minutes=5)
+            }
+        
+        return JsonResponse(response_data)
+        
+    except CustomUser.DoesNotExist:
+        return JsonResponse({'error': 'Worker not found'}, status=404)
+    except Exception as e:
+        logger.error(f"Error in get_worker_status: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
+    
+@api_view(['GET'])
+@login_required
+def get_worker_activity_log(request, worker_id):
+    try:
+        worker = CustomUser.objects.get(
+            id=worker_id,
+            project_manager=request.user,
+            user_type='TEMP_WORKER'
+        )
+        
+        # Get today's activities
+        activities = TimeEntry.objects.filter(
+            user=worker,
+            timestamp__date=timezone.now().date()
+        ).order_by('-timestamp')
+        
+        return JsonResponse({
+            'activities': [{
+                'type': entry.entry_type,
+                'timestamp': entry.timestamp.isoformat(),
+                'note': entry.note
+            } for entry in activities]
+        })
+        
+    except CustomUser.DoesNotExist:
+        return JsonResponse({'error': 'Worker not found'}, status=404)

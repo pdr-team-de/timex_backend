@@ -1,264 +1,109 @@
+async function createTimeEntry(type, note = null) {
+    try {
+        const csrftoken = getCookie('csrftoken');
+        console.log('Creating time entry:', { type, note, csrftoken: !!csrftoken });
 
-document.addEventListener('DOMContentLoaded', function(){
-    // State management
-    let timeEntries = [];
-    let totalWorkTime = 0;
-    let totalBreakTime = 0;
-    let lastAction = null;
-    let containerCount = 0;
-
-    // Icon paths configuration
-    const BUTTON_STATES = {
-        KOMMEN: {
-            active: '/static/time_tracking/icons/KommenAktivMitText.svg',
-            inactive: '/static/time_tracking/icons/KommenInaktivMitText.svg',
-            transparent: '/static/time_tracking/icons/KommenAktivTransparent.svg'
-        },
-        GEHEN: {
-            active: '/static/time_tracking/icons/GehenAktivMitText.svg',
-            inactive: '/static/time_tracking/icons/GehenInaktivMitText.svg',
-            transparent: '/static/time_tracking/icons/GehenAktivTransparent.svg'
-        },
-        FEIERABEND: {
-            active: '/static/time_tracking/icons/FeierabendAktivMitText.svg',
-            inactive: '/static/time_tracking/icons/FeierabendInaktivMitText.svg',
-            transparent: '/static/time_tracking/icons/FeierabendAktivTransparent.svg'
-        }
-    };
-
-    // Button state management
-    function updateButtonStates(action) {
-        const kommenBtn = document.getElementById('KommenAktiv');
-        const gehenBtn = document.getElementById('GehenAktiv');
-        const feierabendBtn = document.getElementById('FeierabendAktiv');
-
-        switch(action) {
-            case 'kommen':
-                kommenBtn.disabled = true;
-                kommenBtn.querySelector('img').src = BUTTON_STATES.KOMMEN.inactive;
-                gehenBtn.disabled = false;
-                gehenBtn.querySelector('img').src = BUTTON_STATES.GEHEN.active;
-                feierabendBtn.style.display = 'none';
-                break;
-
-            case 'gehen':
-                gehenBtn.disabled = true;
-                gehenBtn.querySelector('img').src = BUTTON_STATES.GEHEN.inactive;
-                kommenBtn.disabled = false;
-                kommenBtn.querySelector('img').src = BUTTON_STATES.KOMMEN.active;
-                feierabendBtn.style.display = 'flex';
-                feierabendBtn.querySelector('img').src = BUTTON_STATES.FEIERABEND.active;
-                break;
-
-            case 'feierabend':
-                kommenBtn.disabled = true;
-                gehenBtn.disabled = true;
-                feierabendBtn.disabled = true;
-                kommenBtn.querySelector('img').src = BUTTON_STATES.KOMMEN.inactive;
-                gehenBtn.querySelector('img').src = BUTTON_STATES.GEHEN.inactive;
-                feierabendBtn.querySelector('img').src = BUTTON_STATES.FEIERABEND.inactive;
-                break;
-        }
-    }
-
-    // Event Listeners
-    document.getElementById('KommenAktiv').addEventListener('click', function(){
-        const now = new Date();
-        const entry = {
-            type: 'kommen',
-            time: now,
-            containerId: `time-tracking-${++containerCount}`
-        };
-        timeEntries.push(entry);
-
-        if (!lastAction) {
-            document.getElementById('info-container').style.display = 'none';
-        } else if (lastAction === 'gehen') {
-            const lastGehen = timeEntries.find(e => e.type === 'gehen');
-            if (lastGehen) {
-                const breakTime = Math.round((now - lastGehen.time) / (1000 * 60));
-                totalBreakTime += breakTime;
-                updateInfoContainer();
-            }
-        }
-        
-        createTimeTrackingContainer(entry);
-        lastAction = 'kommen';
-        updateButtonStates('kommen');
-    });
-
-    document.getElementById('GehenAktiv').addEventListener('click', function(){
-        const now = new Date();
-        const entry = {
-            type: 'gehen',
-            time: now,
-            containerId: `time-tracking-${++containerCount}`
-        };
-        timeEntries.push(entry);
-
-        const lastKommen = timeEntries.filter(e => e.type === 'kommen').pop();
-        if (lastKommen) {
-            const workTime = Math.round((now - lastKommen.time) / (1000 * 60));
-            totalWorkTime += workTime;
-            updateInfoContainer();
-        }
-
-        createTimeTrackingContainer(entry);
-        lastAction = 'gehen';
-        updateButtonStates('gehen');
-    });
-
-    document.getElementById('FeierabendAktiv').addEventListener('click', function(){
-        const note = prompt('Sie sind dabei ihren Arbeitstag zu beenden. Dieser Schritt kann nicht rückgängig gemacht werden. \nOptional: Möchten Sie eine Notiz an den Projektleiter senden?');
-        if (note !== null) {
-            const now = new Date();
-            const entry = {
-                type: 'feierabend',
-                time: now,
-                containerId: `time-tracking-${++containerCount}`,
-                note: note
-            };
-            timeEntries.push(entry);
-
-            if (lastAction === 'kommen') {
-                const lastKommen = timeEntries.filter(e => e.type === 'kommen').pop();
-                if (lastKommen) {
-                    const workTime = Math.round((now - lastKommen.time) / (1000 * 60));
-                    totalWorkTime += workTime;
-                    updateInfoContainer();
-                }
-            }
-
-            createTimeTrackingContainer(entry);
-            lastAction = 'feierabend';
-            updateButtonStates('feierabend');
-            
-            // Send data to server
-            sendTimeEntries(timeEntries, note);
-        }
-    });
-
-    function createTimeTrackingContainer(entry) {
-        const container = document.createElement('div');
-        container.id = entry.containerId;
-        container.className = 'time-tracking-container';
-        
-        const timeString = entry.time.toLocaleTimeString('de-DE', {
-            hour: '2-digit',
-            minute: '2-digit'
+        const response = await fetch('/api/time-entries/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ type, note }),
+            credentials: 'same-origin'
         });
-        const dateString = entry.time.toLocaleDateString('de-DE', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
+
+        console.log('Response status:', response.status);
+
+        if (response.redirected) {
+            window.location.href = response.url;
+            return;
+        }
+
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Server returned non-JSON response');
+        }
+
+        const data = await response.json();
+        console.log('Response data:', data);
+
+        if (!response.ok) {
+            throw new Error(data.message || `HTTP error! status: ${response.status}`);
+        }
+
+        if (data.status === 'success') {
+            updateTimeEntryDisplay(data.data);
+            updateButtonStates(type.toLowerCase());
+            return data;
+        } else {
+            throw new Error(data.message || 'Unknown error');
+        }
+
+    } catch (error) {
+        console.error('Error details:', error);
+        
+        if (error.message.includes('non-JSON response')) {
+            // Refresh the page if session expired
+            window.location.reload();
+            return;
+        }
+        
+        alert(`Fehler beim Speichern des Zeiteintrags: ${error.message}`);
+        throw error;
+    } finally {
+        // Re-enable buttons if needed
+        const buttons = ['KommenAktiv', 'GehenAktiv', 'FeierabendAktiv'];
+        buttons.forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) btn.disabled = false;
         });
-        
-        const iconName = BUTTON_STATES[entry.type.toUpperCase()].transparent;
-        
-        container.innerHTML = `
-            <div class="time-tracking-item">
-                <img src="${iconName}" alt="Time Icon" class="time-icon">
-                <div class="time-info">
-                    <p class="mb-0">${timeString} ${dateString}</p>
-                    ${entry.note ? `<p class="text-muted mb-0">Notiz: ${entry.note}</p>` : ''}
-                </div>
-            </div>
-        `;
-
-        const infoContainer = document.getElementById('info-container');
-        infoContainer.parentNode.insertBefore(container, infoContainer.nextSibling);
     }
+}
+document.addEventListener('DOMContentLoaded', function() {
+    const kommenBtn = document.getElementById('KommenAktiv');
+    const gehenBtn = document.getElementById('GehenAktiv');
+    const feierabendBtn = document.getElementById('FeierabendAktiv');
 
-    function updateInfoContainer() {
-        const infoContainer = document.getElementById('info-container');
-        infoContainer.style.display = 'flex';
-        infoContainer.style.flexDirection = 'column'; // Add this line
-        infoContainer.style.alignItems = 'center'; // Add this line
-        infoContainer.innerHTML = '';
-
-        const workHours = Math.floor(totalWorkTime / 60);
-        const workMinutes = totalWorkTime % 60;
-        const formattedWork = `${String(workHours).padStart(2, '0')}:${String(workMinutes).padStart(2, '0')}`;
-        
-        const workTimeInfo = document.createElement('p');
-        workTimeInfo.textContent = `${formattedWork} h Arbeitszeit gebucht`;
-        workTimeInfo.style.margin = '0.5rem 0'; // Add spacing
-        infoContainer.appendChild(workTimeInfo);
-
-        if (totalBreakTime > 0) {
-            const breakHours = Math.floor(totalBreakTime / 60);
-            const breakMinutes = totalBreakTime % 60;
-            const formattedBreak = `${String(breakHours).padStart(2, '0')}:${String(breakMinutes).padStart(2, '0')}`;
-            
-            const breakInfo = document.createElement('p');
-            breakInfo.textContent = `${formattedBreak} h Pause gebucht`;
-            breakInfo.style.margin = '0.5rem 0'; // Add spacing
-            infoContainer.appendChild(breakInfo);
-        }
-    }
-
-    
-
-    async function createTimeEntry(type, note = null) {
-        try {
-            const response = await fetch('/api/time-entries/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken'),
-                    'Accept': 'application/json'
-                },
-                credentials: 'same-origin',
-                body: JSON.stringify({
-                    entry_type: type,
-                    note: note
-                })
-            });
-    
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    if (kommenBtn) {
+        kommenBtn.addEventListener('click', async function() {
+            if (this.disabled) return;
+            try {
+                this.disabled = true;
+                await createTimeEntry('KOMMEN');
+            } catch (error) {
+                console.error('Kommen error:', error);
+                this.disabled = false;
             }
-    
-            const data = await response.json();
-            
-            if (data.status === 'success') {
-                // Update UI
-                const entryData = {
-                    type: type.toLowerCase(),
-                    time: new Date(data.data.time),
-                    note: note
-                };
-                
-                createTimeTrackingContainer(entryData);
-                updateButtonStates(type.toLowerCase());
-                
-                if (type === 'FEIERABEND') {
-                    updateInfoContainer();
-                }
-            } else {
-                throw new Error(data.message || 'Unbekannter Fehler');
-            }
-    
-        } catch (error) {
-            console.error('Error:', error);
-            alert(`Fehler beim Speichern des Zeiteintrags: ${error.message}`);
-        }
+        });
     }
 
-    document.getElementById('KommenAktiv').addEventListener('click', function(){
-        this.disabled = true;
-        createTimeEntry('KOMMEN');
-    });
+    if (gehenBtn) {
+        gehenBtn.addEventListener('click', async function() {
+            if (this.disabled) return;
+            try {
+                this.disabled = true;
+                await createTimeEntry('GEHEN');
+            } catch (error) {
+                console.error('Gehen error:', error);
+                this.disabled = false;
+            }
+        });
+    }
 
-    document.getElementById('GehenAktiv').addEventListener('click', function(){
-        this.disabled = true;
-        createTimeEntry('GEHEN');
-    });
-
-    document.getElementById('FeierabendAktiv').addEventListener('click', function(){
-        const note = prompt('Möchten Sie eine Notiz für den Projektleiter hinterlassen?');
-        createTimeEntry('FEIERABEND', note);
-    });
-
+    if (feierabendBtn) {
+        feierabendBtn.addEventListener('click', async function() {
+            if (this.disabled) return;
+            try {
+                this.disabled = true;
+                const note = prompt('Möchten Sie eine Notiz für den Projektleiter hinterlassen?');
+                await createTimeEntry('FEIERABEND', note);
+            } catch (error) {
+                console.error('Feierabend error:', error);
+                this.disabled = false;
+            }
+        });
+    }
 });
