@@ -11,7 +11,7 @@ urlpatterns = [
 
     path('tracking/', views.time_tracking_view, name='time-tracking'),
     path('dashboard/admin/', views.AdminDashboard.as_view(), name='admin-dashboard'),  
-    path('dashboard/admin/', views.ProjectManagerDashboard.as_view(), name='project-manager-dashboard'),  
+    path('dashboard/admin/project_manager_dashboard', views.ProjectManagerDashboard.as_view(), name='project-manager-dashboard'),  
     path('dashboard/admin/create-admin/', views.create_admin, name='create-admin'),  
     path('dashboard/admin/project-manager/', views.create_project_manager, name='create-project-manager'), 
     path('dashboard/admin/temp-worker/', views.create_temp_worker, name='create-temp-worker'),  

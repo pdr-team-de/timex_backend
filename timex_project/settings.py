@@ -78,8 +78,8 @@ AUTH_USER_MODEL = 'time_tracking.CustomUser'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -90,8 +90,12 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SAMESITE = 'Lax'  # oder 'None' wenn du Cookies über Domains brauchst
+SESSION_COOKIE_SAMESITE = 'Lax'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
+    "http://localhost:3000",
     "https://timex-backend.onrender.com",
 ]
 
@@ -246,6 +250,11 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
+        'corsheaders': {
+        'handlers': ['console', 'file'],
+        'level': 'DEBUG',
+        'propagate': True,
+    },
         'django.auth': {
             'handlers': ['console', 'file'],
             'level': 'DEBUG',
