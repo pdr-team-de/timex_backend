@@ -3,11 +3,12 @@ from django.contrib.auth.views import LogoutView
 from django.views.generic import TemplateView
 from rest_framework.decorators import api_view
 from . import views
+from .views import CustomLogoutView
 
 urlpatterns = [
     path('', views.redirect_to_appropriate_page, name='home'),
     path('login/', views.CustomLoginView.as_view(), name='login'),
-    path('logout/', views.CustomLogoutView.as_view(), name='logout'),
+    path('logout/', CustomLogoutView.as_view(), name='logout'),
 
     path('tracking/', views.time_tracking_view, name='time-tracking'),
     path('dashboard/admin/', views.AdminDashboard.as_view(), name='admin-dashboard'),  

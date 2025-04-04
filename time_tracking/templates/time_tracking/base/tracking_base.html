@@ -42,13 +42,13 @@
                 </div>
                 <a href="datenschutz.html">Datenschutz</a>
                 <a href="impressum.html">Impressum</a>
-                <a href="{% url 'logout' %}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                    Logout
-                </a>
-                <form id="logout-form" action="{% url 'logout' %}" method="post" style="display: none;">
+                <!-- Replace existing logout section with this -->
+                <form id="logout-form" action="{% url 'logout' %}" method="POST" style="display: none;">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-primary">Logout</button>
                 </form>
+                <a href="#" onclick="handleLogout(event)" class="nav-link">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
                 
     
                 <p style="font-size: smaller;">&copy; 2025 PDR-Team GmbH</p>
@@ -64,6 +64,17 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        function handleLogout(event) {
+            event.preventDefault();
+            const form = document.getElementById('logout-form');
+            if (form) {
+                // Clear any stored session data
+                sessionStorage.clear();
+                localStorage.clear();
+                // Submit the form
+                form.submit();
+            }
+        }
         document.addEventListener('DOMContentLoaded', function() {
             const hamburgerMenu = document.getElementById('hamburger-menu');
             const menuOverlay = document.getElementById('menu-overlay');
@@ -83,19 +94,8 @@
                     menuOverlay.style.display = 'none';
                 }
             });
-            function handleLogout() {
-                const form = document.getElementById('logout-form');
-                if (form) {
-                    // Clear any stored session data
-                    sessionStorage.clear();
-                    localStorage.clear();
-                    
-                    // Submit the logout form
-                    form.submit();
-                }
-            }
         });
-        </script>
+          </script>
     {% endblock %}
     
 </body>

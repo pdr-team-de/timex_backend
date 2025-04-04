@@ -156,12 +156,16 @@ class CustomLogoutView(LogoutView):
     
     def dispatch(self, request, *args, **kwargs):
         try:
-            # Clear all session data
-            request.session.flush()
-            # Perform logout
-            logout(request)
-            # Add success message
-            messages.success(request, 'Successfully logged out.')
+            if request.method == 'POST':
+                # Clear all session data
+                request.session.flush()
+                # Perform logout
+                logout(request)
+                # Add success message
+                messages.success(request, 'Successfully logged out.')
+            else:
+                # If not POST, redirect to home
+                return redirect('time-tracking')
         except Exception as e:
             # Log the error
             logger.error(f"Logout error: {str(e)}")
