@@ -485,6 +485,8 @@ def export_time_entries(request):
 @login_required
 def create_time_entry(request):
     # Logge die grundlegenden Informationen zum Nutzer
+    logger.debug(f"User: {request.user}, User Type: {getattr(request.user, 'user_type', 'unbekannt')}")
+
     logger.debug(f"create_time_entry called. User: {request.user}, "
                  f"User Type: {getattr(request.user, 'user_type', 'unbekannt')}, "
                  f"Authenticated: {request.user.is_authenticated}")
