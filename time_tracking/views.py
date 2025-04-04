@@ -172,7 +172,7 @@ def is_project_manager(user):
 
 class ProjectManagerDashboard(UserPassesTestMixin, ListView):
     model = TimeEntry
-    template_name = 'time_tracking/admin/project_manager_dashboard.html'
+    template_name = 'time_tracking/admin/project_manager_dashboard/project_manager_dashboard.html'
     context_object_name = 'time_entries'
     paginate_by = 10
     ordering = ['-timestamp']
