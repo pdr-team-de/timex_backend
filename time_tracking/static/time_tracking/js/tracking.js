@@ -45,11 +45,17 @@ async function createTimeEntry(type, note = null) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-CSRFToken': getCookie('csrftoken'),
                 'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify({ type, note })
         });
+
+        const contentType = response.headers.get('Content-Type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Server response is not JSON');
+        }
 
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || 'Server error');
