@@ -456,6 +456,44 @@ footer ul {
     flex-direction: column;
     justify-content: space-around;
 }
+
+.user-info-overlay {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.user-info-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  color: #333;
+}
+
+.user-role {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0;
+}
   
 @media (max-width: 768px) {
     .main-background{

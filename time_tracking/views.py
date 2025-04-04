@@ -155,11 +155,18 @@ class CustomLogoutView(LogoutView):
     next_page = reverse_lazy('login')
     
     def dispatch(self, request, *args, **kwargs):
-        # Clear all session data
-        request.session.flush()
-        # Perform logout
-        logout(request)
-        # Redirect to login page
+        try:
+            # Clear all session data
+            request.session.flush()
+            # Perform logout
+            logout(request)
+            # Add success message
+            messages.success(request, 'Successfully logged out.')
+        except Exception as e:
+            # Log the error
+            logger.error(f"Logout error: {str(e)}")
+            messages.error(request, 'Error during logout.')
+            
         return super().dispatch(request, *args, **kwargs)
 
 
