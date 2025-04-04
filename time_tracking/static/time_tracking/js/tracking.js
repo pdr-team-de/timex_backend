@@ -52,6 +52,8 @@ async function createTimeEntry(type, note = null) {
             body: JSON.stringify({ type, note })
         });
 
+        console.log('Response:', response);
+
         const contentType = response.headers.get('Content-Type');
         if (!contentType || !contentType.includes('application/json')) {
             throw new Error('Server response is not JSON');
@@ -69,6 +71,7 @@ async function createTimeEntry(type, note = null) {
         alert('Fehler beim Erstellen des Eintrags.');
     }
 }
+
 
 function createTimeTrackingContainer(entry) {
     const container = document.createElement('div');
