@@ -484,28 +484,45 @@ def export_time_entries(request):
 @require_http_methods(["POST"])
 @login_required
 def create_time_entry(request):
-    try:
-        if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({
-                'status': 'error',
-                'message': 'AJAX request required'
-            }, status=400)
+    # Logge die grundlegenden Informationen zum Nutzer
+    logger.debug(f"create_time_entry called. User: {request.user}, "
+                 f"User Type: {getattr(request.user, 'user_type', 'unbekannt')}, "
+                 f"Authenticated: {request.user.is_authenticated}")
 
+    # Überprüfe, ob der angemeldete Nutzer tatsächlich ein TEMP_WORKER ist
+    if request.user.user_type != 'TEMP_WORKER':
+        logger.debug("User is not a TEMP_WORKER. Redirecting to tracking view.")
+        # Redirect anstatt JSON-Response, falls der Nutzer nicht berechtigt ist
+        return redirect('tracking')
+
+    # Überprüfe den X-Requested-With Header
+    if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
+        logger.error("Missing or incorrect X-Requested-With header.")
+        return JsonResponse({
+            'status': 'error',
+            'message': 'AJAX request required'
+        }, status=400)
+
+    try:
+        # Versuche, den Request-Body als JSON zu laden
         try:
             data = json.loads(request.body)
         except json.JSONDecodeError:
+            logger.error("Invalid JSON data received.")
             return JsonResponse({
                 'status': 'error',
-                'message': 'Invalid JSON'
+                'message': 'Invalid JSON data'
             }, status=400)
 
         entry_type = data.get('type', '').upper()
         if entry_type not in ['KOMMEN', 'GEHEN', 'FEIERABEND']:
+            logger.error(f"Invalid entry type received: {entry_type}")
             return JsonResponse({
                 'status': 'error',
                 'message': 'Invalid entry type'
             }, status=400)
 
+        # Erstelle den Zeiteintrag
         entry = TimeEntry.objects.create(
             user=request.user,
             entry_type=entry_type,
@@ -525,9 +542,11 @@ def create_time_entry(request):
                 'note': entry.note or ''
             }
         }
+        logger.debug(f"Time entry created successfully: {response_data}")
         return JsonResponse(response_data, status=201)
 
     except Exception as e:
+        logger.error(f"Error creating time entry: {str(e)}")
         return JsonResponse({
             'status': 'error',
             'message': str(e)

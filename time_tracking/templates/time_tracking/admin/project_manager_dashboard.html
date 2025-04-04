@@ -297,22 +297,24 @@
                                         {% endfor %}
                                     </tbody>
                                     <!-- Add Activity Log Modal-->
-                                     <div class="modal fade" id="activityLogModal">
+                                    <div class="modal fade" id="activityLogModal" tabindex="-1" aria-labelledby="activityLogModalLabel">
                                         <div class="modal-dialog modal-lg">
                                             <div class="modal-content">
                                                 <div class="modal-header">
-                                                    <h5 class="modal-title">Aktivitätsprotokoll</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    <h5 class="modal-title" id="activityLogModalLabel">Aktivitätsprotokoll</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" data-bs-target="#activityLogModal"></button>
                                                 </div>
                                                 <div class="modal-body">
-                                                    <!-- this will be filled dynamically-->
+                                                    <div class="activity-timeline" id="activityLog">
+                                                        <!-- Will be filled dynamically -->
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
                                                 </div>
                                             </div>
-
                                         </div>
-
-
-                                     </div>
+                                    </div>
 
                                 </table>
                             </div>
